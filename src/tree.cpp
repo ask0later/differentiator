@@ -4,7 +4,7 @@ TreeError ConstructorTree(Tree* tree)
 {
     assert(tree);
     
-    tree->root = NewNode();
+    tree->root = CreateNode(NO_TYPE, NO_OP, NULL, NULL);
     if (tree->root == NULL) {return ERROR_ALLOCATION;}
 
     tree->size = 1;
@@ -13,19 +13,23 @@ TreeError ConstructorTree(Tree* tree)
     return NO_ERROR;
 }
 
-Node* NewNode()//Type value_type, Operators value_Operators,  )
+Node* CreateNode(Type type, double value, Node* left, Node* right)
 {
     Node* node = (Node*) calloc(1, sizeof(Node));
     if (!node) {return 0;}
 
-    node->left   = NULL;
-    node->right  = NULL;
+    node->left   = left;
+    node->right  = right;
 
-    node->data.value     = NULL;
+    node->type = type;
+
     node->data.value_op  = NO_OP;
-    node->data.variable  = NULL;
+    node->data.variable = NULL;
 
-    node->type   = NO_TYPE;
+    if (node->type == OPERATOR)
+        node->data.value_op  = (Operators) value;
+    else if (node->type == NUM)
+        node->data.value = value;
 
     return node;
 }
@@ -123,11 +127,14 @@ void DeleteNode(Node* node)
 {
     if (!node) return;
 
-    DeleteNode(node->left);
-    DeleteNode(node->right);
-    
+    //fprintf(stderr, "%d", node->type);
     if (node->type == VAR)
         free(node->data.variable);
+    
+    if (node->left)
+        DeleteNode(node->left);
+    if (node->right)
+        DeleteNode(node->right);
     
     free(node);
     
@@ -192,7 +199,7 @@ TreeError ReadTree(Tree* tree, Node** node, char** position, Order order_value, 
 
     if (**position == '(')
     {
-        *node = NewNode();
+        *node = CreateNode(NO_TYPE, 0, NULL, NULL);
 
         tree->size++;
 
@@ -236,10 +243,10 @@ TreeError ReadTree(Tree* tree, Node** node, char** position, Order order_value, 
     {
         return NO_ERROR;
     }
-    else
-    {
-        return READER_ERROR;
-    }
+    // else
+    // {
+    //     return READER_ERROR;
+    // }
 
     return NO_ERROR;
 }

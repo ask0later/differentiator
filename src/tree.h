@@ -32,7 +32,7 @@ struct Table
 enum Operators
 {
     NO_OP,
-    OP_ADD = 1,
+    OP_ADD,
     OP_SUB,
     OP_MUL,
     OP_DIV
@@ -110,7 +110,8 @@ struct Tree
 TreeError ConstructorTree(Tree* tree);
 void       DestructorTree(Tree* tree);
 
-Node*   NewNode();
+
+Node* CreateNode(Type type, double value, Node* left, Node* right);
 void DeleteNode(Node* node);
 
 

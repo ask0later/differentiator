@@ -38,7 +38,7 @@ TreeError GraphicDumpNode(Node* node, size_t counter)
                 sprintf(str, " + ");
                 break;
             case OP_SUB:
-                sprintf(str, " + ");
+                sprintf(str, " - ");
                 break;
             case OP_MUL:
                 sprintf(str, " * ");

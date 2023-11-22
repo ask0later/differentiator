@@ -7,9 +7,8 @@
 
 double Evaluate(Node* node, double x);
 
-
-
-
+Node* Differentiator(Node* node);
+Node* Copynator(Node* node);
 
 
 

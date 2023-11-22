@@ -1,16 +1,32 @@
 digraph DotGraph
 {
-    Node1 [shape="box", color="black", fontcolor="black", fillcolor="#EE204D", style="filled", weight="1", label=" / "];
-    Node3 [shape="box", color="black", fontcolor="black", fillcolor="#EE204D", style="filled", weight="1", label=" + "];
-    Node7 [shape="box", color="black", fontcolor="black", fillcolor="#7BF2DA", style="filled", weight="1", label="2000"];
+    Node1 [shape="box", color="black", fontcolor="black", fillcolor="#EE204D", style="filled", weight="1", label=" + "];
+    Node3 [shape="box", color="black", fontcolor="black", fillcolor="#EE204D", style="filled", weight="1", label=" * "];
+    Node7 [shape="box", color="black", fontcolor="black", fillcolor="#EE204D", style="filled", weight="1", label=" - "];
+    Node15 [shape="box", color="black", fontcolor="black", fillcolor="#7BF2DA", style="filled", weight="1", label="0"];
+    Node7 -> Node15 [color="black", style="solid", weight="1", label=""];
+    Node16 [shape="box", color="black", fontcolor="black", fillcolor="#7BF2DA", style="filled", weight="1", label="0"];
+    Node7 -> Node16 [color="black", style="solid", weight="1", label=""];
     Node3 -> Node7 [color="black", style="solid", weight="1", label=""];
-    Node8 [shape="box", color="black", fontcolor="black", fillcolor="#21C912", style="filled", weight="1", label="x "];
+    Node8 [shape="box", color="black", fontcolor="black", fillcolor="#EE204D", style="filled", weight="1", label=" + "];
+    Node17 [shape="box", color="black", fontcolor="black", fillcolor="#7BF2DA", style="filled", weight="1", label="10"];
+    Node8 -> Node17 [color="black", style="solid", weight="1", label=""];
+    Node18 [shape="box", color="black", fontcolor="black", fillcolor="#21C912", style="filled", weight="1", label="x "];
+    Node8 -> Node18 [color="black", style="solid", weight="1", label=""];
     Node3 -> Node8 [color="black", style="solid", weight="1", label=""];
     Node1 -> Node3 [color="black", style="solid", weight="1", label=""];
-    Node4 [shape="box", color="black", fontcolor="black", fillcolor="#EE204D", style="filled", weight="1", label=" + "];
-    Node9 [shape="box", color="black", fontcolor="black", fillcolor="#21C912", style="filled", weight="1", label="y "];
+    Node4 [shape="box", color="black", fontcolor="black", fillcolor="#EE204D", style="filled", weight="1", label=" * "];
+    Node9 [shape="box", color="black", fontcolor="black", fillcolor="#EE204D", style="filled", weight="1", label=" - "];
+    Node19 [shape="box", color="black", fontcolor="black", fillcolor="#7BF2DA", style="filled", weight="1", label="5"];
+    Node9 -> Node19 [color="black", style="solid", weight="1", label=""];
+    Node20 [shape="box", color="black", fontcolor="black", fillcolor="#7BF2DA", style="filled", weight="1", label="2"];
+    Node9 -> Node20 [color="black", style="solid", weight="1", label=""];
     Node4 -> Node9 [color="black", style="solid", weight="1", label=""];
-    Node10 [shape="box", color="black", fontcolor="black", fillcolor="#21C912", style="filled", weight="1", label="z "];
+    Node10 [shape="box", color="black", fontcolor="black", fillcolor="#EE204D", style="filled", weight="1", label=" + "];
+    Node21 [shape="box", color="black", fontcolor="black", fillcolor="#7BF2DA", style="filled", weight="1", label="0"];
+    Node10 -> Node21 [color="black", style="solid", weight="1", label=""];
+    Node22 [shape="box", color="black", fontcolor="black", fillcolor="#7BF2DA", style="filled", weight="1", label="1"];
+    Node10 -> Node22 [color="black", style="solid", weight="1", label=""];
     Node4 -> Node10 [color="black", style="solid", weight="1", label=""];
     Node1 -> Node4 [color="black", style="solid", weight="1", label=""];
 }
