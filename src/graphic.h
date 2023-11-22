@@ -3,8 +3,8 @@
 #include "tree.h" 
 
 
-TreeError   GraphicDump(Tree* tree);
-TreeError GraphicDumpNode(Node* node, size_t counter);
+TreeError   GraphicDump(Tree* tree1, Tree* tree2);
+TreeError GraphicDumpNode(Node* node);
 
 
 

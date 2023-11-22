@@ -1,7 +1,7 @@
 #include "graphic.h"
 #include "Dotter.h"
 
-TreeError GraphicDump(Tree* tree)
+TreeError GraphicDump(Tree* tree1, Tree* tree2)
 {
     dtBegin("Tree.dot");                        // Начало dot-описания графа
 
@@ -9,7 +9,8 @@ TreeError GraphicDump(Tree* tree)
     dtNodeStyle ().style         ("filled");
     dtNodeStyle ().fontcolor      ("black");
 
-    GraphicDumpNode(tree->root, 1);
+    GraphicDumpNode(tree1->root);
+    GraphicDumpNode(tree2->root);
 
     dtEnd();                                   // Конец dot-описания графа
 
@@ -19,8 +20,10 @@ TreeError GraphicDump(Tree* tree)
 }
 
 
-TreeError GraphicDumpNode(Node* node, size_t counter)
+TreeError GraphicDumpNode(Node* node)
 {
+    if (!node) return NO_ERROR;
+
     if (!node) {return NO_ERROR;}
 
     char str[MAX_SIZE_ARG] = {};
@@ -55,18 +58,18 @@ TreeError GraphicDumpNode(Node* node, size_t counter)
     }
     
     
-    dtNode((int) counter, str);
+    dtNode((int)(size_t) node, str);
 
     if (node->left  != 0)
     {
-        GraphicDumpNode(node->left, counter * 2 + 1);
-        dtLink((int) counter, (int)(counter * 2 + 1), "");
+        GraphicDumpNode(node->left);
+        dtLink((int)(size_t) node, (int)(size_t)(node->left), "");
     }
 
     if (node->right != 0)
     {
-        GraphicDumpNode(node->right, counter * 2 + 2);
-        dtLink((int) counter, (int)(counter * 2 + 2), "");
+        GraphicDumpNode(node->right);
+        dtLink((int)(size_t) node, (int)(size_t)(node->right), "");
     }
 
     return NO_ERROR;
