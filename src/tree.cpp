@@ -8,6 +8,7 @@ TreeError ConstructorTree(Tree* tree)
     if (tree->root == NULL) {return ERROR_ALLOCATION;}
 
     tree->size = 1;
+    tree->num_names = 0;
 
     return NO_ERROR;
 }
@@ -19,7 +20,11 @@ Node* NewNode()//Type value_type, Operators value_Operators,  )
 
     node->left   = NULL;
     node->right  = NULL;
-    node->value  = NULL;
+
+    node->data.value     = NULL;
+    node->data.value_op  = NO_OP;
+    node->data.variable  = NULL;
+
     node->type   = NO_TYPE;
 
     return node;
@@ -35,10 +40,14 @@ TreeError PrintNode(Node* node, FILE* To, Order order_value)
     if (order_value == PRE_ORDER)
     {
         if (node->type == NUM)
-            fprintf(To, "%lg", node->value);
-        else
+            fprintf(To, "%lg", node->data.value);
+        else if (node->type == OPERATOR)
         {
-            PrintOperator((Operators) node->value, To);
+            PrintOperator(node->data.value_op, To);
+        }
+        else if (node->type == VAR)
+        {
+            printf("%s", node->data.variable);
         }
     }
 
@@ -50,10 +59,14 @@ TreeError PrintNode(Node* node, FILE* To, Order order_value)
     if (order_value == IN_ORDER)
     {
         if (node->type == NUM)
-            fprintf(To, "%lg ", node->value);
-        else
+            fprintf(To, "%lg", node->data.value);
+        else if (node->type == OPERATOR)
         {
-            PrintOperator((Operators) node->value, To);
+            PrintOperator(node->data.value_op, To);
+        }
+        else if (node->type == VAR)
+        {
+            printf("%s", node->data.variable);
         }
     }
     
@@ -64,10 +77,14 @@ TreeError PrintNode(Node* node, FILE* To, Order order_value)
     if (order_value == POST_ORDER)
     {
         if (node->type == NUM)
-            fprintf(To, "%lg ", node->value);
-        else
+            fprintf(To, "%lg", node->data.value);
+        else if (node->type == OPERATOR)
         {
-            PrintOperator((Operators) node->value, To);
+            PrintOperator(node->data.value_op, To);
+        }
+        else if (node->type == VAR)
+        {
+            printf("%s", node->data.variable);
         }
     }
 
@@ -109,12 +126,16 @@ void DeleteNode(Node* node)
     DeleteNode(node->left);
     DeleteNode(node->right);
     
+    if (node->type == VAR)
+        free(node->data.variable);
+    
     free(node);
+    
     return;
 }
 
 
-TreeError PasteObject(char* source, Node** node)
+TreeError PasteObject(Tree* tree, char* source, Node** node, Table* names)
 {
     double value = 0;
 
@@ -123,23 +144,48 @@ TreeError PasteObject(char* source, Node** node)
         if (strncmp(source, cmds[i].name, cmds[i].size_name) == 0)
         {
             (*node)->type  = OPERATOR;
-            (*node)->value = cmds[i].value_op;
+            (*node)->data.value_op = cmds[i].value_op;
         }
     }
 
     if ((*node)->type == NO_TYPE)
     {
-        sscanf(source, "%lg", &value);
-        
-        (*node)->type  = NUM; 
-        (*node)->value = value;
+        if (sscanf(source, "%lg", &value) == 1)
+        {
+            (*node)->type  = NUM;
+            (*node)->data.value = value;
+        }
+        else
+        {
+            (*node)->type = VAR;
+            bool x = false;
+
+            for (size_t i = 0; i < MAX_NUM_VARS - 1; i++)
+            {
+                if (strcmp(source, names[i].var_name) == 0)
+                {
+                    (*node)->data.variable = strdup(names[i].var_name);
+                    x = true;
+                }
+            }
+            if (x == false)
+            {
+                (*node)->data.variable = strdup(source);
+                
+                names[tree->num_names].name_size = strlen(source);
+
+                memcpy(names[tree->num_names].var_name, (*node)->data.variable, names->name_size);
+                
+                tree->num_names++;
+            }
+        }
     }
 
     return NO_ERROR;
 }
 
 
-TreeError ReadTree(Tree* tree, Node** node, char** position, Order order_value)
+TreeError ReadTree(Tree* tree, Node** node, char** position, Order order_value, Table* names)
 {
     char source[100] = {};
     SkipSpaces(position);
@@ -156,10 +202,10 @@ TreeError ReadTree(Tree* tree, Node** node, char** position, Order order_value)
         {
             SkipSpaces(position);
             ReadObject(source, position);
-            PasteObject(source, node);
+            PasteObject(tree, source, node, names);
         }
         
-        TreeError error =  ReadTree(tree, &(*node)->left, position, order_value);
+        TreeError error =  ReadTree(tree, &(*node)->left, position, order_value, names);
         if (error != NO_ERROR)
             return error;
 
@@ -167,10 +213,10 @@ TreeError ReadTree(Tree* tree, Node** node, char** position, Order order_value)
         {
             SkipSpaces(position);
             ReadObject(source, position);
-            PasteObject(source, node);
+            PasteObject(tree, source, node, names);
         }
 
-        error = ReadTree(tree, &(*node)->right, position, order_value);
+        error = ReadTree(tree, &(*node)->right, position, order_value, names);
         if (error != NO_ERROR)
             return error;
 
@@ -178,7 +224,7 @@ TreeError ReadTree(Tree* tree, Node** node, char** position, Order order_value)
         {
             SkipSpaces(position);
             ReadObject(source, position);
-            PasteObject(source, node);
+            PasteObject(tree, source, node, names);
         }
         
         SkipSpaces(position);
@@ -200,7 +246,7 @@ TreeError ReadTree(Tree* tree, Node** node, char** position, Order order_value)
 
 TreeError SkipSpaces(char** position)
 {
-    while (**position == ' ')
+    while (isspace(**position))
         (*position)++;
 
     return NO_ERROR;

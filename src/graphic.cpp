@@ -7,7 +7,7 @@ TreeError GraphicDump(Tree* tree)
 
     dtNodeStyle ().shape        ("box");
     dtNodeStyle ().style         ("filled");
-    //dtNodeStyle ().fontcolor      ("black");
+    dtNodeStyle ().fontcolor      ("black");
 
     GraphicDumpNode(tree->root, 1);
 
@@ -27,12 +27,12 @@ TreeError GraphicDumpNode(Node* node, size_t counter)
     if (node->type == NUM)
     {
         dtNodeStyle().fillcolor("#7BF2DA");//HEX_TIFFANY
-        sprintf(str, "%lg", node->value);
+        sprintf(str, "%lg", node->data.value);
     }
     else if (node->type == OPERATOR)
     {
         dtNodeStyle().fillcolor("#EE204D");//HEX_RED
-        switch((int) node->value)
+        switch((int) node->data.value_op)
         {
             case OP_ADD:
                 sprintf(str, " + ");
@@ -47,6 +47,11 @@ TreeError GraphicDumpNode(Node* node, size_t counter)
                 sprintf(str, " / ");
                 break;
         }
+    }
+    else if (node->type == VAR)
+    {
+        dtNodeStyle().fillcolor("#21C912");//HEX_GREEN
+        sprintf(str, "%s", node->data.variable);
     }
     
     

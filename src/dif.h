@@ -5,7 +5,7 @@
 
 
 
-double Evaluate(Node* node);
+double Evaluate(Node* node, double x);
 
 
 

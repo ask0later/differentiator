@@ -16,24 +16,33 @@
 
 const size_t MAX_SIZE_TREE = 64;
 const size_t MAX_SIZE_ARG  = 64;
-const size_t MAX_SIZE_NAME = 5;
+const size_t MAX_SIZE_NAME = 10;
 const size_t NUM_COMMANDS  = 4;
+const size_t MAX_NUM_VARS = 10;
 
 typedef char* Elem_t;
 
-struct Command
+struct Table
 {
-    char name[MAX_SIZE_NAME];
-    size_t size_name;
-    size_t  value_op;
+    char var_name[MAX_SIZE_NAME];
+    double         varible_value;
+    size_t             name_size;
 };
 
 enum Operators
 {
+    NO_OP,
     OP_ADD = 1,
     OP_SUB,
     OP_MUL,
     OP_DIV
+};
+
+struct Command
+{
+    char name[MAX_SIZE_NAME];
+    size_t   size_name;
+    Operators value_op;
 };
 
 const size_t SIZE_ADD = 3;
@@ -73,13 +82,19 @@ enum Type
     NO_TYPE,
     NUM,
     OPERATOR,
-    VAR,
-    
+    VAR
+};
+
+union tag_data
+{
+    double        value;
+    char*      variable;
+    Operators  value_op;
 };
 
 struct Node
 {
-    double  value;
+    tag_data data;
     Type     type;
     Node*    left;
     Node*   right;
@@ -89,6 +104,7 @@ struct Tree
 {
     Node* root;
     size_t size;
+    size_t num_names;
 };
 
 TreeError ConstructorTree(Tree* tree);
@@ -122,10 +138,10 @@ void PrintOperator(Operators value_Operators, FILE* TO);
 
 
 
-TreeError ReadTree(Tree* tree, Node** node, char** position, Order order_value);
+TreeError ReadTree(Tree* tree, Node** node, char** position, Order order_value, Table* names);
 
 TreeError SkipSpaces(char** position);
 TreeError ReadObject(char* source, char** position);
-TreeError PasteObject(char* source, Node** node);
+TreeError PasteObject(Tree* tree, char* source, Node** node, Table* names);
 
 #endif
