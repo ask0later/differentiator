@@ -12,33 +12,7 @@ TreeError ConstructorTree(Tree* tree)
     return NO_ERROR;
 }
 
-            //--//
-double Evaluate(Node* node)
-{
-    if (node != NULL) {return 0;}
-    if (node->type == NUM)
-        return node->value;
-    
-    double left = 0, right = 0;
-
-    if (!node->left)
-        left  = Evaluate(node->left);
-    if (!node->right)
-        right = Evaluate(node->right);
-
-    switch((int) node->value)
-    {
-        case OP_ADD: return left + right;
-
-        case OP_SUB: return left - right;
-
-        case OP_MUL: return left * right;
-
-        case OP_DIV: return left / right;
-    }
-}
-
-Node* NewNode()
+Node* NewNode()//Type value_type, Operators value_Operators,  )
 {
     Node* node = (Node*) calloc(1, sizeof(Node));
     if (!node) {return 0;}
@@ -53,9 +27,8 @@ Node* NewNode()
 
 TreeError PrintNode(Node* node, FILE* To, Order order_value)
 {
+    if (!node) {return NO_ERROR;}
     if (To == NULL) {return FILE_NOT_OPEN;}
-
-    if (!node) {/*fprintf(To, "nil ");*/ return NO_ERROR;}
 
     fprintf(To, "( ");
 
@@ -65,7 +38,7 @@ TreeError PrintNode(Node* node, FILE* To, Order order_value)
             fprintf(To, "%lg", node->value);
         else
         {
-            PrintOperator((OPERATORS) node->value, To);
+            PrintOperator((Operators) node->value, To);
         }
     }
 
@@ -77,10 +50,10 @@ TreeError PrintNode(Node* node, FILE* To, Order order_value)
     if (order_value == IN_ORDER)
     {
         if (node->type == NUM)
-            fprintf(To, "%lg", node->value);
+            fprintf(To, "%lg ", node->value);
         else
         {
-            PrintOperator((OPERATORS) node->value, To);
+            PrintOperator((Operators) node->value, To);
         }
     }
     
@@ -94,7 +67,7 @@ TreeError PrintNode(Node* node, FILE* To, Order order_value)
             fprintf(To, "%lg ", node->value);
         else
         {
-            PrintOperator((OPERATORS) node->value, To);
+            PrintOperator((Operators) node->value, To);
         }
     }
 
@@ -103,9 +76,9 @@ TreeError PrintNode(Node* node, FILE* To, Order order_value)
     return NO_ERROR;
 }
 
-void PrintOperator(OPERATORS value, FILE* To)
+void PrintOperator(Operators value_Operators, FILE* To)
 {
-    switch(value)
+    switch(value_Operators)
     {
         case OP_ADD:
             fprintf(To, " + ");
@@ -140,84 +113,21 @@ void DeleteNode(Node* node)
     return;
 }
 
-TreeError ReadTree(Tree* tree, Node** node, FILE* From, Order order_value)
-{
-    if (From == NULL) {return FILE_NOT_OPEN;}
-    char ptr[MAX_SIZE_ARG] = {};
-    char* source;
-    source = ptr;
-    
-    if (fscanf(From, "%s", ptr) == EOF) {return LIB_IS_EMPTY;}
-    // if (fscanf(From, "%s", ptr) == 0)
-    if (strcmp(source, "nil") == 0)
-        return NO_ERROR;
-
-    if (strcmp(source, "(") == 0)
-    {
-        *node = NewNode();
-        tree->size++;
-
-        if (*node == NULL) {return ERROR_ALLOCATION;}
-
-        if (order_value == PRE_ORDER)
-        {
-            //ReadTextPhrase(source, From);
-            PasteObject(source, node);
-        }
-        
-        TreeError error = ReadTree(tree, &(*node)->left, From, order_value);
-        if (error != NO_ERROR)
-            return error;
-
-        if (order_value == IN_ORDER)
-        {
-            //ReadTextPhrase(source, From);
-            PasteObject(source, node);
-        }
-
-        error = ReadTree(tree, &(*node)->right, From, order_value);
-        if (error != NO_ERROR)
-            return error;
-        
-        if (order_value == POST_ORDER)
-        {
-            //ReadTextPhrase(source, From);
-            PasteObject(source, node);
-        }
-
-        fscanf(From, "%s", source);
-    }
-
-    return NO_ERROR;
-}
 
 TreeError PasteObject(char* source, Node** node)
 {
     double value = 0;
-    fprintf(stderr, "|%s|", source);
 
-    if (strncmp(source, "add", 3) == 0)
+    for (size_t i = 0; i < NUM_COMMANDS; i++)
     {
-        (*node)->type  = OPERATOR;
-        (*node)->value = OP_ADD;
-    } 
-    else if (strncmp(source, "sub", 3) == 0)
-    {
-        fprintf(stderr, "НУ И ЧТО");
-        (*node)->type  = OPERATOR;
-        (*node)->value = OP_ADD; 
+        if (strncmp(source, cmds[i].name, cmds[i].size_name) == 0)
+        {
+            (*node)->type  = OPERATOR;
+            (*node)->value = cmds[i].value_op;
+        }
     }
-    else if (strncmp(source, "mul", 3) == 0)
-    {
-        (*node)->type  = OPERATOR;
-        (*node)->value = OP_MUL; 
-    }
-    else if (strncmp(source, "div", 3) == 0)
-    {
-        (*node)->type  = OPERATOR;
-        (*node)->value = OP_DIV; 
-    }
-    else
+
+    if ((*node)->type == NO_TYPE)
     {
         sscanf(source, "%lg", &value);
         
@@ -229,31 +139,16 @@ TreeError PasteObject(char* source, Node** node)
 }
 
 
-TreeError NewReadTree(Tree* tree, Node** node, char** position, Order order_value)
+TreeError ReadTree(Tree* tree, Node** node, char** position, Order order_value)
 {
-    
     char source[100] = {};
     SkipSpaces(position);
 
-    if (**position == '.')
-    {   
-        fprintf(stderr, "<%c>", **position);
-        (*position)++;
-        // fprintf(stderr, "<<%c>>", **position);
-        // fprintf(stderr, "<<%c>>", *(*position + 1));
-
-        return NO_ERROR; 
-    }
-
-    fprintf(stderr, ".%c.", **position);
     if (**position == '(')
     {
-
         *node = NewNode();
-        //fprintf(stderr, "#узел#");
 
         tree->size++;
-
 
         (*position)++;
 
@@ -263,35 +158,41 @@ TreeError NewReadTree(Tree* tree, Node** node, char** position, Order order_valu
             ReadObject(source, position);
             PasteObject(source, node);
         }
-        //fprintf(stderr, "#левая#");
+        
+        TreeError error =  ReadTree(tree, &(*node)->left, position, order_value);
+        if (error != NO_ERROR)
+            return error;
 
-        NewReadTree(tree, &(*node)->left, position, order_value);
-        
-        //fprintf(stderr, "#правая#");
-        
-        NewReadTree(tree, &(*node)->right, position, order_value);
-        
-        //fprintf(stderr, "#закрываю#");
+        if (order_value == IN_ORDER)
+        {
+            SkipSpaces(position);
+            ReadObject(source, position);
+            PasteObject(source, node);
+        }
 
+        error = ReadTree(tree, &(*node)->right, position, order_value);
+        if (error != NO_ERROR)
+            return error;
+
+        if (order_value == POST_ORDER)
+        {
+            SkipSpaces(position);
+            ReadObject(source, position);
+            PasteObject(source, node);
+        }
+        
         SkipSpaces(position);
 
         if (**position == ')')
-        {
-            fprintf(stderr, "<%c>", **position);
-            fprintf(stderr, "OKEY");
             (*position)++;
-        }
-        
-        //fprintf(stderr, "<%c>", **position);
     }
     else if (**position == ')')
     {
-        fprintf(stderr, "ex,");
         return NO_ERROR;
     }
     else
     {
-        fprintf(stderr, "error\n");
+        return READER_ERROR;
     }
 
     return NO_ERROR;
@@ -300,10 +201,7 @@ TreeError NewReadTree(Tree* tree, Node** node, char** position, Order order_valu
 TreeError SkipSpaces(char** position)
 {
     while (**position == ' ')
-    {
-        fprintf(stderr, "<%c>", **position);
         (*position)++;
-    }
 
     return NO_ERROR;
 }
@@ -313,23 +211,14 @@ TreeError ReadObject(char* source, char** position)
 {
     size_t i = 0;
 
-    // while (**position != ' ')// && (**position != ')'))
-    // {
-    //     source[i] = **position;
-    //     fprintf(stderr, "<%c>", **position);
-    //     (*position)++;
-    //     i++;
-    // }
-    while ((**position != '.') && (**position != ')') && (**position != '('))
+    while ((**position != ')') && (**position != '('))
     {
         source[i] = **position;
-        fprintf(stderr, "<%c>", **position);
         (*position)++;
         i++;
     }
-    fprintf(stderr, "[%s]", source);
-    (*position)--;
 
+    (*position)--;
 
     return NO_ERROR;
 }
@@ -367,8 +256,8 @@ void DumpErrors(TreeError error)
         case DEFINE_IS_NULL:
             printf("error: define is null\n");
             break;
-        case LIB_IS_EMPTY:
-            printf("error: libary is empty\n");
+        case READER_ERROR:
+            printf("error: reading is fail\n");
             break;
         case ELEMENT_NOT_FOUND:
             printf("error: object is not in the tree\n");

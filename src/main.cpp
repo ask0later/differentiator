@@ -1,5 +1,7 @@
 #include "tree.h"
 #include "readFile.h"
+#include "dif.h"
+#include "graphic.h"
 
 
 int main()
@@ -8,22 +10,17 @@ int main()
     Tree tree   = {};
 
     CreateBuffer(&buffer, "file.txt");
-    // FILE* From = fopen("file.txt", "r");
-    // fclose(From);
+
     char* position = buffer.position;
 
-    fprintf(stderr, "С%sЭ\n", position);
-    //ReadTree(&tree, &(&tree)->root, From, PRE_ORDER);
-
-    NewReadTree(&tree, &tree.root, &position, PRE_ORDER);
-
+    ReadTree(&tree, &tree.root, &position, PRE_ORDER);
     
+    GraphicDump(&tree);
+    printf("^_^ _/%lg\n", Evaluate(tree.root));
+
     printf("\n");
-    printf("печатаю <");
-    
-
     PrintNode(tree.root, stdout, IN_ORDER);
-    printf(">напечатал \n");
+    printf("\n");
 
     DestructorTree(&tree);
     DeleteBuffer(&buffer);

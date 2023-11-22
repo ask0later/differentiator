@@ -1,0 +1,16 @@
+digraph DotGraph
+{
+    Node1 [shape="box", color="black", fontcolor="black", fillcolor="#EE204D", style="filled", weight="1", label=" / "];
+    Node3 [shape="box", color="black", fontcolor="black", fillcolor="#EE204D", style="filled", weight="1", label=" + "];
+    Node7 [shape="box", color="black", fontcolor="black", fillcolor="#7BF2DA", style="filled", weight="1", label="2000"];
+    Node3 -> Node7 [color="black", style="solid", weight="1", label=""];
+    Node8 [shape="box", color="black", fontcolor="black", fillcolor="#7BF2DA", style="filled", weight="1", label="1000"];
+    Node3 -> Node8 [color="black", style="solid", weight="1", label=""];
+    Node1 -> Node3 [color="black", style="solid", weight="1", label=""];
+    Node4 [shape="box", color="black", fontcolor="black", fillcolor="#EE204D", style="filled", weight="1", label=" + "];
+    Node9 [shape="box", color="black", fontcolor="black", fillcolor="#7BF2DA", style="filled", weight="1", label="3"];
+    Node4 -> Node9 [color="black", style="solid", weight="1", label=""];
+    Node10 [shape="box", color="black", fontcolor="black", fillcolor="#7BF2DA", style="filled", weight="1", label="4"];
+    Node4 -> Node10 [color="black", style="solid", weight="1", label=""];
+    Node1 -> Node4 [color="black", style="solid", weight="1", label=""];
+}
