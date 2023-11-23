@@ -28,7 +28,7 @@ int main()
     names[0].var_value = 1;
     names[1].var_value = 2;
     names[2].var_value = 3;
-    PrintNameTable(&tree, names);
+    PrintNameTable(&tree, names); 
 
     printf("\n");
     printf("%lg\n", Evaluate(&tree, tree.root, names));
