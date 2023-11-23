@@ -25,7 +25,7 @@ typedef char* Elem_t;
 struct Table
 {
     char var_name[MAX_SIZE_NAME];
-    double         varible_value;
+    double             var_value;
     size_t             name_size;
 };
 
@@ -73,8 +73,7 @@ enum TreeError
     ERROR_POSITIONING_FUNC,
     DEFINE_IS_NULL,
     ELEMENT_NOT_FOUND,
-    READER_ERROR,
-    EXIT
+    READER_ERROR
 };
 
 enum Type

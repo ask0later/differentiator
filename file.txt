@@ -1,1 +1,1 @@
-( ( ( ( ( (  ( ( 5 ) mul ( x ) ) mul ( x ) )  mul ( x ) )  add ( ( x ) mul ( x ) ) ) div ( ( 3 ) mul ( x ) ) ) mul ( x ) ) mul ( ( ( 6 ) mul ( x ) ) add ( 2 ) ) )
+( ( ( ( ( 2 ) mul ( egor ) ) mul ( yaroslav ) ) mul ( yaroslav ) ) add ( ( ( 3 ) mul ( yaroslav ) ) mul ( arseny ) ) )

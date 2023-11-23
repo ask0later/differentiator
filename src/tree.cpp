@@ -113,6 +113,9 @@ void PrintOperator(Operators value_Operators, FILE* To)
         case OP_DIV:
             fprintf(To, " / ");
             break;
+        default:
+            printf("extra");
+            break;
     }
 }
 
@@ -181,7 +184,7 @@ TreeError PasteObject(Tree* tree, char* source, Node** node, Table* names)
                 
                 names[tree->num_names].name_size = strlen(source);
 
-                memcpy(names[tree->num_names].var_name, (*node)->data.variable, names->name_size);
+                memcpy(names[tree->num_names].var_name, (*node)->data.variable, names[tree->num_names].name_size);
                 
                 tree->num_names++;
             }
