@@ -12,6 +12,7 @@
 #include <math.h>
 
 #include "color.h"
+#include "readFile.h"
 
 
 const size_t MAX_SIZE_TREE = 64;
@@ -113,10 +114,14 @@ void       DestructorTree(Tree* tree);
 Node* CreateNode(Type type, double value, Node* left, Node* right);
 void DeleteNode(Node* node);
 
-
-void       TextDump(Tree* tree);
-
 TreeError  PrintNode(Node* node, FILE*   To, Order order_value);
+void PrintObject(Node* node, FILE* To);
+void PrintOperator(Operators value_Operators, FILE* TO);
+
+TreeError ReadTree(Tree* tree, Node** node, char** position, Order order_value, Table* names, Text buffer);
+TreeError SkipSpaces(char** position);
+TreeError ReadObject(char* source, char** position);
+TreeError PasteObject(Tree* tree, char* source, Node** node, Table* names);
 
 
 
@@ -128,20 +133,5 @@ TreeError  Swap(Node* addresses[], int left, int right);
 
 void DumpErrors(TreeError error);
 
-void WriteToFile(Tree* tree);
-
-
-
-// diff
-
-void PrintOperator(Operators value_Operators, FILE* TO);
-
-
-
-TreeError ReadTree(Tree* tree, Node** node, char** position, Order order_value, Table* names);
-
-TreeError SkipSpaces(char** position);
-TreeError ReadObject(char* source, char** position);
-TreeError PasteObject(Tree* tree, char* source, Node** node, Table* names);
 
 #endif

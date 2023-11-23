@@ -16,7 +16,7 @@ int main()
 
     char* position = buffer.position;
 
-    TreeError error = ReadTree(&tree, &tree.root, &position, IN_ORDER, names);
+    TreeError error = ReadTree(&tree, &tree.root, &position, IN_ORDER, names, buffer);
     if (error != NO_ERROR)
     {
         DumpErrors(error);
@@ -25,28 +25,28 @@ int main()
     }
 
     PrintNameTable(&tree, names);
+    printf("\n");
     names[0].var_value = 1;
     names[1].var_value = 2;
     names[2].var_value = 3;
     PrintNameTable(&tree, names); 
 
     printf("\n");
-    printf("%lg\n", Evaluate(&tree, tree.root, names));
+    printf("f(%lg, %lg, %lg) = %lg\n", Evaluate(&tree, tree.root, names), names[0].var_value, names[1].var_value, names[2].var_value);
     
     tree_dif.root = Differentiator(tree.root, names[2]);
 
-    printf("%lg\n", Evaluate(&tree, tree_dif.root, names));
+    printf("f'(%lg, %lg, %lg) = %lg\n", Evaluate(&tree, tree_dif.root, names), names[0].var_value, names[1].var_value, names[2].var_value);
 
-    
     
     GraphicDump(&tree, &tree_dif);
 
+    printf("f(%s, %s, %s) = ", names[0].var_name, names[1].var_name, names[2].var_name);
     PrintNode(tree.root, stdout, IN_ORDER);
-    //printf("это было дерево считанное\n");
-    
-
-    //PrintNode(tree_dif.root, stdout, IN_ORDER);
-    //printf("это было дерево продиф\n");
+    printf("\n");
+    printf("f'(%s, %s, %s) = ", names[0].var_name, names[1].var_name, names[2].var_name);
+    PrintNode(tree_dif.root, stdout, IN_ORDER);
+    printf("\n");
 
 
 

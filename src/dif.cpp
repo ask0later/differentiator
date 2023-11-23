@@ -37,7 +37,7 @@ Node* Copynator(Node* node)
         value = (double) node->data.value_op;
 
     Node* new_node = CreateNode(node->type, value, Copynator(node->left), Copynator(node->right));
-    //Node* new_node = CreateNode(node->type, value, node->left, node->right);
+    
     if (node->type == VAR)
         new_node->data.variable = strdup(node->data.variable);
 
@@ -47,7 +47,7 @@ Node* Copynator(Node* node)
 
 double Evaluate(Tree* tree, Node* node, Table* names)
 {
-    //if (!node) {return NAN;}
+    if (!node) {return NAN;}
     if (node->type == NUM)
     {
         return node->data.value;
@@ -68,8 +68,6 @@ double Evaluate(Tree* tree, Node* node, Table* names)
         left  = Evaluate(tree, node->left, names);
     if (node->right)
         right = Evaluate(tree, node->right, names);
-
-    //printf("%lg and %lg operator = %d\n", left, right, node->data.value_op);
 
     switch(node->data.value_op)
     {

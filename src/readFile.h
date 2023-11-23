@@ -18,8 +18,8 @@ enum ReaderError
 
 struct Text
 {
-    size_t      size_buffer;
-    char*          position;
+    size_t  size_buffer;
+    char*      position;
 };
 
 
