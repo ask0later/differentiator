@@ -3,12 +3,10 @@
 TreeError ConstructorTree(Tree* tree)
 {
     assert(tree);
-    
-    tree->root = CreateNode(NO_TYPE, NO_OP, NULL, NULL);
-    if (tree->root == NULL) {return ERROR_ALLOCATION;}
 
-    tree->size = 1;
+    tree->size = 0;
     tree->num_names = 0;
+    tree->changes_num = 0;
 
     return NO_ERROR;
 }
@@ -23,13 +21,16 @@ Node* CreateNode(Type type, double value, Node* left, Node* right)
 
     node->type = type;
 
-    node->data.value_op  = NO_OP;
-    node->data.variable = NULL;
+    // node->data.value_op  = NO_OP;
+    // node->data.value_fun = NO_FUN;
+    // node->data.variable  = NULL;
 
     if (node->type == OPERATOR)
         node->data.value_op  = (Operators) value;
     else if (node->type == NUM)
         node->data.value = value;
+    else if (node->type == FUNCTION)
+        node->data.value_fun = (Functions) value;
 
     return node;
 }
@@ -38,31 +39,40 @@ TreeError PrintNode(Node* node, FILE* To, Order order_value)
 {
     if (!node) {return NO_ERROR;}
     if (To == NULL) {return FILE_NOT_OPEN;}
+    
+    TreeError error = NO_ERROR;
 
-    if ((node->type == OPERATOR) && ((node->data.value_op == OP_ADD) || (node->data.value_op == OP_SUB)))
-        fprintf(To, "( "); 
+    //if ((node->type == OPERATOR) && ((node->data.value_op == OP_ADD) || (node->data.value_op == OP_SUB)))
+    fprintf(To, "( ");
 
     if (order_value == PRE_ORDER)
         PrintObject(node, To);
 
-    TreeError error = PrintNode(node-> left, To, order_value);
-    if (error != NO_ERROR)
-        return error;
-
+    if (node->left)
+    {
+        error = PrintNode(node->left, To, order_value);
+        if (error != NO_ERROR)
+            return error;
+    }
     
     if (order_value == IN_ORDER)
+    {
         PrintObject(node, To);
+    }
     
-    error = PrintNode(node->right, To, order_value);
-    if (error != NO_ERROR)
-        return error;
+    if (node->right)
+    {
+        error = PrintNode(node->right, To, order_value);
+        if (error != NO_ERROR)
+            return error;
+    }
     
     if (order_value == POST_ORDER)
         PrintObject(node, To);
 
-
-    if ((node->type == OPERATOR) && ((node->data.value_op == OP_ADD) || (node->data.value_op == OP_SUB)))
-        fprintf(To, ") ");
+    fprintf(To, " ) ");
+    // if ((node->type == OPERATOR) && ((node->data.value_op == OP_ADD) || (node->data.value_op == OP_SUB)))
+    //     fprintf(To, ") ");
 
     return NO_ERROR;
 }
@@ -75,12 +85,40 @@ void PrintObject(Node* node, FILE* To)
     {
         PrintOperator(node->data.value_op, To);
     }
+    else if (node->type == FUNCTION)
+    {
+        PrintFunction(node->data.value_fun, To);
+    }
     else if (node->type == VAR)
     {
         printf("%s", node->data.variable);
     }
 }
 
+void PrintFunction(Functions value_Functions, FILE* To)
+{
+    switch(value_Functions)
+    {
+        case FUN_SIN:
+            fprintf(To, " sin ");
+            break;
+        case FUN_COS:
+            fprintf(To, " cos ");
+            break;
+        case FUN_POW:
+            fprintf(To, " ^ ");
+            break;
+        case FUN_SQRT:
+            fprintf(To, " sqrt ");
+            break;
+        case FUN_LN:
+            fprintf(To, " ln ");
+            break;    
+        default:
+            printf("extra");
+            break;
+    }
+}
 void PrintOperator(Operators value_Operators, FILE* To)
 {
     switch(value_Operators)
@@ -136,12 +174,19 @@ TreeError PasteObject(Tree* tree, char* source, Node** node, Table* names)
     {
         if (strncmp(source, cmds[i].name, cmds[i].size_name) == 0)
         {
+            (*node)->num_args = cmds[i].num_args;
             (*node)->type  = cmds[i].type;
+            //printf("num_atgs = %d type = %d\n", (*node)->num_args, (*node)->type);
             if ((*node)->type == OPERATOR)
+            {
                 (*node)->data.value_op  = (Operators) cmds[i].value;
+                //printf("op = %d\n", (*node)->data.value_op);
+            }
             else if ((*node)->type == FUNCTION)
+            {
                 (*node)->data.value_fun = (Functions) cmds[i].value;
-
+                //printf("fun = %d\n", (*node)->data.value_fun);
+            }
             return NO_ERROR;
         }
     }
@@ -179,6 +224,7 @@ TreeError ReadTree(Tree* tree, Node** node, char** position, Order order_value, 
     if (*position - buffer.position >= (long int) buffer.size_buffer) {return READER_ERROR;}
 
     char source[MAX_SIZE_ARG] = {};
+    TreeError error = NO_ERROR;
     
     SkipSpaces(position);
 
@@ -190,16 +236,37 @@ TreeError ReadTree(Tree* tree, Node** node, char** position, Order order_value, 
 
         (*position)++;
 
+        char* start_posirion = *position;
+
+        Node* node_temp = CreateNode(NO_TYPE, 0, NULL, NULL);
+
+        SkipSpaces(position);
+        ReadObject(source, position);
+        PasteObject(tree, source, &node_temp, names);
+
+        UnaryorBinary unary_binary = (*node)->num_args;
+
+        DeleteNode(node_temp);
+
+        *position = start_posirion;
+
         if (order_value == PRE_ORDER)
         {
             SkipSpaces(position);
             ReadObject(source, position);
             PasteObject(tree, source, node, names);
         }
-        
-        TreeError error =  ReadTree(tree, &(*node)->left, position, order_value, names, buffer);
-        if (error != NO_ERROR)
-            return error;
+
+        if (unary_binary == UNARY)
+        {
+            (*node)->left = NULL;
+        }
+        else
+        {
+            error =  ReadTree(tree, &(*node)->left, position, order_value, names, buffer);
+            if (error != NO_ERROR)
+                return error;
+        }
 
         if (order_value == IN_ORDER)
         {
@@ -252,8 +319,8 @@ TreeError ReadObject(char* source, char** position)
         i++;
     }
     
-    source[i - 1] = 0; // убирает последний пробел обЪекта
-    printf("%s\n", source);
+    //source[i - 1] = 0; // убирает последний пробел обЪекта
+    //printf("%s\n", source);
 
     (*position)--;
 

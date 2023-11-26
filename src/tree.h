@@ -23,11 +23,10 @@ const size_t MAX_NUM_VARS  = 10;
 
 typedef char* Elem_t;
 
-struct Table
+enum UnaryorBinary
 {
-    char var_name[MAX_SIZE_NAME];
-    double             var_value;
-    size_t             name_size;
+    UNARY  = 1,
+    BINARY = 2
 };
 
 enum Type
@@ -64,8 +63,15 @@ struct Command
     size_t   size_name;
     Type          type;
     int          value;
+    UnaryorBinary num_args;
 };
 
+struct Table
+{
+    char var_name[MAX_SIZE_NAME];
+    double             var_value;
+    size_t             name_size;
+};
 
 
 const size_t SIZE_ADD  = 3;
@@ -78,15 +84,15 @@ const size_t SIZE_POW  = 3;
 const size_t SIZE_SQRT = 4;
 const size_t SIZE_LN   = 2;
 
-const Command cmds[NUM_COMMANDS] = {{"add",  SIZE_ADD,  OPERATOR, OP_ADD  },\
-                                    {"sub",  SIZE_SUB,  OPERATOR, OP_SUB  },\
-                                    {"mul",  SIZE_MUL,  OPERATOR, OP_MUL  },\
-                                    {"div",  SIZE_DIV,  OPERATOR, OP_DIV  },\
-                                    {"sin",  SIZE_SIN,  FUNCTION, FUN_SIN },\
-                                    {"cos",  SIZE_COS,  FUNCTION, FUN_COS },\
-                                    {"pow",  SIZE_POW,  FUNCTION, FUN_POW },\
-                                    {"sqrt", SIZE_SQRT, FUNCTION, FUN_SQRT},\
-                                    {"ln",   SIZE_LN,   FUNCTION, FUN_LN  } };
+const Command cmds[NUM_COMMANDS] = {{"add",  SIZE_ADD,  OPERATOR, OP_ADD  , BINARY},\
+                                    {"sub",  SIZE_SUB,  OPERATOR, OP_SUB  , BINARY},\
+                                    {"mul",  SIZE_MUL,  OPERATOR, OP_MUL  , BINARY},\
+                                    {"div",  SIZE_DIV,  OPERATOR, OP_DIV  , BINARY},\
+                                    {"sin",  SIZE_SIN,  FUNCTION, FUN_SIN , UNARY },\
+                                    {"cos",  SIZE_COS,  FUNCTION, FUN_COS , UNARY },\
+                                    {"pow",  SIZE_POW,  FUNCTION, FUN_POW , BINARY},\
+                                    {"sqrt", SIZE_SQRT, FUNCTION, FUN_SQRT, UNARY },\
+                                    {"ln",   SIZE_LN,   FUNCTION, FUN_LN  , UNARY } };
 
 enum Order
 {
@@ -94,6 +100,8 @@ enum Order
     IN_ORDER   = 2,
     POST_ORDER = 3,
 };
+
+
 
 
 enum TreeError
@@ -121,10 +129,11 @@ union tag_data
 
 struct Node
 {
-    tag_data data;
-    Type     type;
-    Node*    left;
-    Node*   right;
+    UnaryorBinary  num_args;
+    tag_data  data;
+    Type      type;
+    Node*     left;
+    Node*    right;
 };
 
 struct Tree
@@ -145,6 +154,7 @@ void DeleteNode(Node* node);
 TreeError  PrintNode(Node* node, FILE*   To, Order order_value);
 void PrintObject(Node* node, FILE* To);
 void PrintOperator(Operators value_Operators, FILE* TO);
+void PrintFunction(Functions value_Functions, FILE* To);
 
 TreeError ReadTree(Tree* tree, Node** node, char** position, Order order_value, Table* names, Text buffer);
 TreeError SkipSpaces(char** position);

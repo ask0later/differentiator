@@ -9,6 +9,8 @@ int main()
     Text buffer = {};
     Tree tree   = {};
     Tree tree_dif = {};
+    ConstructorTree(&tree);
+    ConstructorTree(&tree_dif);
 
     Table names[MAX_NUM_VARS] = {};
 
@@ -23,20 +25,23 @@ int main()
         DestructorTree(&tree);
         return 1;
     }
-    
+    Simplification(&tree);
+    printf("\\");
     PrintNode(tree.root, stdout, IN_ORDER);
+    printf("\n");
+
     
-    // Simplification(&tree);
+    printf("<%s>\n", names[0].var_name);
+    tree_dif.root = Differentiator(tree.root, names[0]);
 
-    // PrintNode(tree.root, stdout, IN_ORDER);
+    PrintNode(tree_dif.root, stdout, IN_ORDER);
+    printf("\n");
 
-    // printf("\n");
+    Simplification(&tree_dif);
 
-    // tree_dif.root = Differentiator(tree.root, names[0]);
+    PrintNode(tree_dif.root, stdout, IN_ORDER);
+    printf("\n");
 
-    // Simplification(&tree_dif);
-    // PrintNode(tree_dif.root, stdout, IN_ORDER);
-    // printf("\n");
     GraphicDump(&tree, &tree_dif);
 
     // PrintNode(tree_dif.root, stdout, IN_ORDER);
@@ -46,7 +51,9 @@ int main()
     // CollapsingConstants(&(tree_dif.root));
     // RemoveDummyElements(&(tree_dif.root));
 
-    // printf("f'(%lg, %lg, %lg) = %lg\n", names[0].var_value, names[1].var_value, names[2].var_value, Evaluate(&tree, tree_dif.root, names));
+    
+    // names[0].var_value = 1;
+    // printf("f(%lg) = %lg\n", names[0].var_value, Evaluate(&tree, tree.root, names));
 
     
     

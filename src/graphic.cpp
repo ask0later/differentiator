@@ -37,7 +37,7 @@ TreeError GraphicDumpNode(Node* node)
     else if (node->type == OPERATOR)
     {
         dtNodeStyle().fillcolor("#EE204D");//HEX_RED
-        switch((int) node->data.value_op)
+        switch(node->data.value_op)
         {
             case OP_ADD:
                 sprintf(str, " + ");
@@ -50,6 +50,28 @@ TreeError GraphicDumpNode(Node* node)
                 break;
             case OP_DIV:
                 sprintf(str, " / ");
+                break;
+        }
+    }
+    else if (node->type == FUNCTION)
+    {
+        dtNodeStyle().fillcolor("#F8D568");//HEX_YELLOW        
+        switch(node->data.value_fun)
+        {
+            case FUN_SIN:
+                sprintf(str, " sin ");
+                break;
+            case FUN_COS:
+                sprintf(str, " cos ");
+                break;
+            case FUN_POW:
+                sprintf(str, " ^ ");
+                break;
+            case FUN_SQRT:
+                sprintf(str, " sqrt ");
+                break;
+            case FUN_LN:
+                sprintf(str, " ln ");
                 break;
         }
     }
