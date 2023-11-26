@@ -18,8 +18,8 @@
 const size_t MAX_SIZE_TREE = 64;
 const size_t MAX_SIZE_ARG  = 64;
 const size_t MAX_SIZE_NAME = 10;
-const size_t NUM_COMMANDS  = 4;
-const size_t MAX_NUM_VARS = 10;
+const size_t NUM_COMMANDS  =  9;
+const size_t MAX_NUM_VARS  = 10;
 
 typedef char* Elem_t;
 
@@ -28,6 +28,15 @@ struct Table
     char var_name[MAX_SIZE_NAME];
     double             var_value;
     size_t             name_size;
+};
+
+enum Type
+{
+    NO_TYPE,
+    NUM,
+    OPERATOR,
+    FUNCTION,
+    VAR
 };
 
 enum Operators
@@ -39,22 +48,45 @@ enum Operators
     OP_DIV
 };
 
+enum Functions
+{
+    NO_FUN,
+    FUN_SIN,
+    FUN_COS,
+    FUN_POW,
+    FUN_SQRT,
+    FUN_LN
+};
+
 struct Command
 {
     char name[MAX_SIZE_NAME];
     size_t   size_name;
-    Operators value_op;
+    Type          type;
+    int          value;
 };
 
-const size_t SIZE_ADD = 3;
-const size_t SIZE_SUB = 3;
-const size_t SIZE_MUL = 3;
-const size_t SIZE_DIV = 3;
 
-const Command cmds[NUM_COMMANDS] = {{"add", SIZE_ADD, OP_ADD},\
-                                    {"sub", SIZE_SUB, OP_SUB},\
-                                    {"mul", SIZE_MUL, OP_MUL},\
-                                    {"div", SIZE_DIV, OP_DIV}};
+
+const size_t SIZE_ADD  = 3;
+const size_t SIZE_SUB  = 3;
+const size_t SIZE_MUL  = 3;
+const size_t SIZE_DIV  = 3;
+const size_t SIZE_SIN  = 3;
+const size_t SIZE_COS  = 3;
+const size_t SIZE_POW  = 3;
+const size_t SIZE_SQRT = 4;
+const size_t SIZE_LN   = 2;
+
+const Command cmds[NUM_COMMANDS] = {{"add",  SIZE_ADD,  OPERATOR, OP_ADD  },\
+                                    {"sub",  SIZE_SUB,  OPERATOR, OP_SUB  },\
+                                    {"mul",  SIZE_MUL,  OPERATOR, OP_MUL  },\
+                                    {"div",  SIZE_DIV,  OPERATOR, OP_DIV  },\
+                                    {"sin",  SIZE_SIN,  FUNCTION, FUN_SIN },\
+                                    {"cos",  SIZE_COS,  FUNCTION, FUN_COS },\
+                                    {"pow",  SIZE_POW,  FUNCTION, FUN_POW },\
+                                    {"sqrt", SIZE_SQRT, FUNCTION, FUN_SQRT},\
+                                    {"ln",   SIZE_LN,   FUNCTION, FUN_LN  } };
 
 enum Order
 {
@@ -77,19 +109,14 @@ enum TreeError
     READER_ERROR
 };
 
-enum Type
-{
-    NO_TYPE,
-    NUM,
-    OPERATOR,
-    VAR
-};
+
 
 union tag_data
 {
-    double        value;
-    char*      variable;
-    Operators  value_op;
+    double         value;
+    char*       variable;
+    Operators   value_op;
+    Functions  value_fun;
 };
 
 struct Node
@@ -105,6 +132,7 @@ struct Tree
     Node* root;
     size_t size;
     size_t num_names;
+    size_t changes_num;
 };
 
 TreeError ConstructorTree(Tree* tree);

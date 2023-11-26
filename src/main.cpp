@@ -23,30 +23,40 @@ int main()
         DestructorTree(&tree);
         return 1;
     }
-
-    PrintNameTable(&tree, names);
-    printf("\n");
-    names[0].var_value = 1;
-    names[1].var_value = 2;
-    names[2].var_value = 3;
-    PrintNameTable(&tree, names); 
-
-    printf("\n");
-    printf("f(%lg, %lg, %lg) = %lg\n", Evaluate(&tree, tree.root, names), names[0].var_value, names[1].var_value, names[2].var_value);
     
-    tree_dif.root = Differentiator(tree.root, names[2]);
-
-    printf("f'(%lg, %lg, %lg) = %lg\n", Evaluate(&tree, tree_dif.root, names), names[0].var_value, names[1].var_value, names[2].var_value);
-
+    PrintNode(tree.root, stdout, IN_ORDER);
     
+    // Simplification(&tree);
+
+    // PrintNode(tree.root, stdout, IN_ORDER);
+
+    // printf("\n");
+
+    // tree_dif.root = Differentiator(tree.root, names[0]);
+
+    // Simplification(&tree_dif);
+    // PrintNode(tree_dif.root, stdout, IN_ORDER);
+    // printf("\n");
     GraphicDump(&tree, &tree_dif);
 
-    printf("f(%s, %s, %s) = ", names[0].var_name, names[1].var_name, names[2].var_name);
-    PrintNode(tree.root, stdout, IN_ORDER);
-    printf("\n");
-    printf("f'(%s, %s, %s) = ", names[0].var_name, names[1].var_name, names[2].var_name);
-    PrintNode(tree_dif.root, stdout, IN_ORDER);
-    printf("\n");
+    // PrintNode(tree_dif.root, stdout, IN_ORDER);
+    // RemoveDummyElements(&(tree_dif.root));
+    // PrintNode(tree_dif.root, stdout, IN_ORDER);
+
+    // CollapsingConstants(&(tree_dif.root));
+    // RemoveDummyElements(&(tree_dif.root));
+
+    // printf("f'(%lg, %lg, %lg) = %lg\n", names[0].var_value, names[1].var_value, names[2].var_value, Evaluate(&tree, tree_dif.root, names));
+
+    
+    
+
+    // printf("f (%s, %s, %s) = ", names[0].var_name, names[1].var_name, names[2].var_name);
+    // PrintNode(tree.root, stdout, IN_ORDER);
+    // printf("\n");
+    // printf("f'(%s, %s, %s) = ", names[0].var_name, names[1].var_name, names[2].var_name);
+    // PrintNode(tree_dif.root, stdout, IN_ORDER);
+    // printf("\n");
 
 
 

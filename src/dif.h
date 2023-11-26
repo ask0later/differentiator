@@ -14,10 +14,8 @@ Node* Copynator(Node* node);
 void PrintNameTable(Tree* tree, Table* names);
 
 
-
-
-
-
-
+TreeError CollapsingConstants(Tree* tree, Node** node);
+TreeError RemoveDummyElements(Tree* tree, Node** node);
+TreeError Simplification(Tree* tree);
 
 #endif

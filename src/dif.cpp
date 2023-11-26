@@ -90,3 +90,146 @@ void PrintNameTable(Tree* tree, Table* names)
         printf("%15s = %3lg (длина имени переменной = %2lu)\n", names[i].var_name, names[i].var_value, names[i].name_size);
     }
 }
+
+
+TreeError RemoveDummyElements(Tree* tree, Node** node)
+{
+    if (!(*node)) {return NO_ERROR;}
+
+    Node** left  = &(*node)->left;
+    Node** right = &(*node)->right;
+    double value = 0;
+
+    Node* copy_node = 0;
+
+    if (((*node)->type == OPERATOR) && ((*right)->type == NUM))
+    {
+        tree->changes_num++;
+        copy_node = Copynator((*node)->left);
+        if (((*right)->data.value == 1) && ((*node)->data.value_op == OP_MUL)) 
+        {
+            DeleteNode(*node);
+            *node = copy_node;
+        }
+        else if (((*right)->data.value == 1) && ((*node)->data.value_op == OP_DIV)) 
+        {
+            DeleteNode(*node);
+            *node = copy_node;
+        }
+        else if (((*right)->data.value == 0) && ((*node)->data.value_op == OP_ADD))
+        {
+            DeleteNode(*node);
+            *node = copy_node;
+        }
+        else if (((*right)->data.value == 0) && ((*node)->data.value_op == OP_SUB))
+        {
+            DeleteNode(*node);
+            *node = copy_node;
+        }
+        else 
+        {
+            DeleteNode(copy_node);
+            tree->changes_num--;
+            RemoveDummyElements(tree, left);
+            RemoveDummyElements(tree, right);
+        }
+    }
+    else if (((*node)->type == OPERATOR) && ((*left)->type == NUM))
+    {
+        tree->changes_num++;
+        copy_node = Copynator((*node)->right);
+        if (((*left)->data.value == 1) && ((*node)->data.value_op == OP_MUL))
+        {
+            DeleteNode(*node);
+            *node = copy_node;
+        }
+        else if (((*left)->data.value == 1) && ((*node)->data.value_op == OP_DIV)) 
+        {
+            DeleteNode(*node);
+            *node = copy_node;
+        }
+        else if (((*left)->data.value == 0) && ((*node)->data.value_op == OP_ADD))
+        {
+            DeleteNode(*node);
+            *node = copy_node;
+        }
+        else if (((*left)->data.value == 0) && ((*node)->data.value_op == OP_SUB))
+        {
+            DeleteNode(*node);
+            *node = copy_node;
+        }
+        else
+        {
+            DeleteNode(copy_node);
+            tree->changes_num--;
+            RemoveDummyElements(tree, left);
+            RemoveDummyElements(tree, right);
+        }
+    }
+    else
+    {
+        RemoveDummyElements(tree, left);
+        RemoveDummyElements(tree, right);
+    }
+
+    return NO_ERROR;
+}
+
+TreeError CollapsingConstants(Tree* tree, Node** node)
+{
+    if (!(*node)) {return NO_ERROR;}
+
+    Node** left  = &(*node)->left;
+    Node** right = &(*node)->right;
+
+    if ((*node)->type == OPERATOR)
+    {
+        if (((*left)->type == NUM) && ((*right)->type == NUM))
+        {
+            tree->changes_num++;
+            double value_left = (*left)->data.value, value_right = (*right)->data.value;
+            double value = 0;
+            switch ((*node)->data.value_op)
+            {
+                case OP_ADD: value = value_left + value_right;
+                    break;
+                case OP_SUB: value = value_left - value_right;
+                    break;
+                case OP_MUL: value = value_left * value_right;
+                    break;
+                case OP_DIV: value = value_left / value_right;
+                    break;
+            }
+            DeleteNode(*node);
+            *node = CreateNode(NUM, value, NULL, NULL);
+            return NO_ERROR;
+        }
+        else
+        {
+            CollapsingConstants(tree, left);
+            CollapsingConstants(tree, right);
+        }
+    }
+    else
+    {
+        CollapsingConstants(tree, left);
+        CollapsingConstants(tree, right);
+    }
+
+    return NO_ERROR;
+}
+
+
+TreeError Simplification(Tree* tree)
+{
+    size_t start_changes_num = 0;
+    do
+    {
+        start_changes_num = tree->changes_num;
+        CollapsingConstants(tree, &(tree->root));
+        RemoveDummyElements(tree, &(tree->root));
+        printf("<%lu>\n", tree->changes_num);
+    } while (start_changes_num != tree->changes_num);
+
+    return NO_ERROR;
+}

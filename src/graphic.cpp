@@ -9,8 +9,10 @@ TreeError GraphicDump(Tree* tree1, Tree* tree2)
     dtNodeStyle ().style         ("filled");
     dtNodeStyle ().fontcolor      ("black");
 
-    GraphicDumpNode(tree1->root);
-    GraphicDumpNode(tree2->root);
+    if (tree1)
+        GraphicDumpNode(tree1->root);
+    if (tree2)
+        GraphicDumpNode(tree2->root);
 
     dtEnd();                                   // Конец dot-описания графа
 

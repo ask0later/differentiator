@@ -136,8 +136,12 @@ TreeError PasteObject(Tree* tree, char* source, Node** node, Table* names)
     {
         if (strncmp(source, cmds[i].name, cmds[i].size_name) == 0)
         {
-            (*node)->type  = OPERATOR;
-            (*node)->data.value_op = cmds[i].value_op;
+            (*node)->type  = cmds[i].type;
+            if ((*node)->type == OPERATOR)
+                (*node)->data.value_op  = (Operators) cmds[i].value;
+            else if ((*node)->type == FUNCTION)
+                (*node)->data.value_fun = (Functions) cmds[i].value;
+
             return NO_ERROR;
         }
     }
@@ -164,7 +168,6 @@ TreeError PasteObject(Tree* tree, char* source, Node** node, Table* names)
         names[tree->num_names].name_size = strlen(source);
         memcpy(names[tree->num_names].var_name, (*node)->data.variable, names[tree->num_names].name_size);
         tree->num_names++;
-        
     }
 
     return NO_ERROR;
@@ -249,6 +252,9 @@ TreeError ReadObject(char* source, char** position)
         i++;
     }
     
+    source[i - 1] = 0; // убирает последний пробел обЪекта
+    printf("%s\n", source);
+
     (*position)--;
 
     return NO_ERROR;

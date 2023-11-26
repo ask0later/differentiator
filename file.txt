@@ -1,1 +1,1 @@
-( ( ( ( ( 2 ) mul ( egor ) ) mul ( yaroslav ) ) mul ( yaroslav ) ) add ( ( ( 3 ) mul ( yaroslav ) ) mul ( arseny ) ) )
+( ( 1 ) add ( sin ( 5 ) ) )
