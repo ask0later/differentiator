@@ -1,0 +1,26 @@
+\documentclass[a4paper,12pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[english,russian]{babel}
+\usepackage{amsmath,amsfonts,amssymb,amsthm,mathtools}
+\usepackage[left=10mm, top=10mm, right=10mm, bottom=20mm, nohead, nofoot]{geometry}
+\usepackage{wasysym}
+\author{\LARGEКузнецов Ярослав Б01-306}
+\title{Решение контрольной работы второго класса}
+\pagestyle {empty}
+\begin{document}
+\maketitle
+\begin{flushleft}
+\Large
+   Вашему вниманию представляется контрольная работа советского второклассника.\\
+   Это задание, было дано ученику первым номером, как самое простое:\\
+1. Найдите производную f(x);\\
+2. Разложите f(x) по формуле Тейлора при x --> 0;\\
+3. И тд.\\
+f (x) = $(  sin ( x  )  ) \\
+   Производная высчитывается при помощи элементарых правил арифметики и очевидных преобразований\\
+f'(x) = $(  cos ( x  )  ) \\
+   Разложение по Макарону:\\
+f(x) = ( ( ( 0 )  \cdot ( ( x )  ^ {( 0 ) } )  )  + ( ( ( 1 )  \cdot ( ( x )  ^ {( 1 ) } )  )  + ( ( ( 0 )  \cdot ( ( x )  ^ {( 2 ) } )  )  + ( ( ( -0.166667 )  \cdot ( ( x )  ^ {( 3 ) } )  )  +  )  )  )  )  + o( x ^ 5 )\\
+\end{flushleft}
+\end{document}

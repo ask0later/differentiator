@@ -74,23 +74,23 @@ struct Table
 };
 
 
-const size_t SIZE_ADD  = 3;
-const size_t SIZE_SUB  = 3;
-const size_t SIZE_MUL  = 3;
-const size_t SIZE_DIV  = 3;
+const size_t SIZE_ADD  = 1;
+const size_t SIZE_SUB  = 1;
+const size_t SIZE_MUL  = 1;
+const size_t SIZE_DIV  = 1;
 const size_t SIZE_SIN  = 3;
 const size_t SIZE_COS  = 3;
-const size_t SIZE_POW  = 3;
+const size_t SIZE_POW  = 1;
 const size_t SIZE_SQRT = 4;
 const size_t SIZE_LN   = 2;
 
-const Command cmds[NUM_COMMANDS] = {{"add",  SIZE_ADD,  OPERATOR, OP_ADD  , BINARY},\
-                                    {"sub",  SIZE_SUB,  OPERATOR, OP_SUB  , BINARY},\
-                                    {"mul",  SIZE_MUL,  OPERATOR, OP_MUL  , BINARY},\
-                                    {"div",  SIZE_DIV,  OPERATOR, OP_DIV  , BINARY},\
+const Command cmds[NUM_COMMANDS] = {{"+",    SIZE_ADD,  OPERATOR, OP_ADD  , BINARY},\
+                                    {"-",    SIZE_SUB,  OPERATOR, OP_SUB  , BINARY},\
+                                    {"*",    SIZE_MUL,  OPERATOR, OP_MUL  , BINARY},\
+                                    {"/",    SIZE_DIV,  OPERATOR, OP_DIV  , BINARY},\
                                     {"sin",  SIZE_SIN,  FUNCTION, FUN_SIN , UNARY },\
                                     {"cos",  SIZE_COS,  FUNCTION, FUN_COS , UNARY },\
-                                    {"pow",  SIZE_POW,  FUNCTION, FUN_POW , BINARY},\
+                                    {"^",    SIZE_POW,  FUNCTION, FUN_POW , BINARY},\
                                     {"sqrt", SIZE_SQRT, FUNCTION, FUN_SQRT, UNARY },\
                                     {"ln",   SIZE_LN,   FUNCTION, FUN_LN  , UNARY } };
 
@@ -155,6 +155,11 @@ TreeError  PrintNode(Node* node, FILE*   To, Order order_value);
 void PrintObject(Node* node, FILE* To);
 void PrintOperator(Operators value_Operators, FILE* TO);
 void PrintFunction(Functions value_Functions, FILE* To);
+
+TreeError LatexPrintNode(Node* node, FILE* To);
+void LatexPrintObject(Node* node, FILE* To);
+void LatexPrintOperator(Operators value_Operators, FILE* To);
+
 
 TreeError ReadTree(Tree* tree, Node** node, char** position, Order order_value, Table* names, Text buffer);
 TreeError SkipSpaces(char** position);

@@ -9,6 +9,7 @@ int main()
     Text buffer = {};
     Tree tree   = {};
     Tree tree_dif = {};
+    Tree tree_tay = {};
     ConstructorTree(&tree);
     ConstructorTree(&tree_dif);
 
@@ -26,48 +27,46 @@ int main()
         return 1;
     }
     Simplification(&tree);
-    printf("\\");
     PrintNode(tree.root, stdout, IN_ORDER);
     printf("\n");
 
+
+    // tree_tay.root = MaclaurinExpansion(&tree, 3, names);
+    // GraphicDump(&tree_tay, NULL);
+
+
+    // DeleteNode(tree_tay.root);
+    PrintfLatex(&tree, names);
+
+    // names[0].var_value = 0;
+    // PrintNameTable(&tree, names);
+    // FILE* FileFunc = fopen("function.txt", "w");
+    // PrintNode(tree.root, FileFunc, IN_ORDER);
+    // fclose(FileFunc);
+
+    // FILE* TaylorFunc = fopen("taylor.txt", "w");
+    // PrintMaclaurinExpansion(&tree, 3, TaylorFunc, names);
+    // fclose(TaylorFunc);
+
+    // char function1[1024] = {};
+    // char function2[1024] = {};
+    // ReadReadyFunctionFrom(function1, "function.txt");
+    // ReadReadyFunctionFrom(function2, "taylor.txt");
+
+    // BuildGraphic("png", "function1.png", "function1.txt", function1, function2, "[-3:3]", "[-10:10]", "Function and Taylor");
+    // system("gnuplot -c function1.txt");
+
+    // char function3[1024] = {};
+    // FILE* TangetFunc = fopen("tanget.txt", "w");
+    // PrintTangentEquation(&tree, TangetFunc, names);
+    // fclose(TangetFunc);
+    // ReadReadyFunctionFrom(function3, "tanget.txt");
     
-    printf("<%s>\n", names[0].var_name);
-    tree_dif.root = Differentiator(tree.root, names[0]);
-
-    PrintNode(tree_dif.root, stdout, IN_ORDER);
-    printf("\n");
-
-    Simplification(&tree_dif);
-
-    PrintNode(tree_dif.root, stdout, IN_ORDER);
-    printf("\n");
-
-    GraphicDump(&tree, &tree_dif);
-
-    // PrintNode(tree_dif.root, stdout, IN_ORDER);
-    // RemoveDummyElements(&(tree_dif.root));
-    // PrintNode(tree_dif.root, stdout, IN_ORDER);
-
-    // CollapsingConstants(&(tree_dif.root));
-    // RemoveDummyElements(&(tree_dif.root));
-
+    // BuildGraphic("png", "function2.png", "function2.txt", function1, function3, "[-3:3]", "[-10:10]", "Function and Tanget");
+    // system("gnuplot -c function2.txt");
     
-    // names[0].var_value = 1;
-    // printf("f(%lg) = %lg\n", names[0].var_value, Evaluate(&tree, tree.root, names));
+    //GraphicDump(&tree, NULL);
 
-    
-    
-
-    // printf("f (%s, %s, %s) = ", names[0].var_name, names[1].var_name, names[2].var_name);
-    // PrintNode(tree.root, stdout, IN_ORDER);
-    // printf("\n");
-    // printf("f'(%s, %s, %s) = ", names[0].var_name, names[1].var_name, names[2].var_name);
-    // PrintNode(tree_dif.root, stdout, IN_ORDER);
-    // printf("\n");
-
-
-
-    DestructorTree(&tree_dif);
     DestructorTree(&tree);
 
     DeleteBuffer(&buffer);

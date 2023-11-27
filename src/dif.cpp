@@ -95,7 +95,11 @@ Node* Copynator(Node* node)
     Node* new_node = CreateNode(node->type, value, Copynator(node->left), Copynator(node->right));
     
     if (node->type == VAR)
+    {
+        free(new_node->data.variable);
         new_node->data.variable = strdup(node->data.variable);
+    }
+        
 
     return new_node;
 }
@@ -110,6 +114,7 @@ double Evaluate(Tree* tree, Node* node, Table* names)
     }
     if (node->type == VAR)
     {
+        //fprintf(stderr, "%lu\n", tree->num_names);
         for (size_t i = 0; i < tree->num_names; i++)
         {
             if (strncmp(node->data.variable, names[i].var_name, names[i].name_size) == 0)
@@ -141,10 +146,13 @@ double Evaluate(Tree* tree, Node* node, Table* names)
     if (node->type == FUNCTION)
     {
         if (node->left)
+        {
             left  = Evaluate(tree, node->left, names);
+        }
         if (node->right)
+        {
             right = Evaluate(tree, node->right, names);
-        
+        }
         switch(node->data.value_op)
         {
             case FUN_SIN:  return (sin(right));
@@ -181,47 +189,52 @@ TreeError RemoveDummyElements(Tree* tree, Node** node)
 
     Node* copy_node = NULL;
 
-    if (((*node)->type == OPERATOR) && ((*right)->type == NUM))
+    if ((*right))
     {
-        tree->changes_num++;
-        copy_node = Copynator((*node)->left);
+        printf("AAA?");
+        if (((*node)->type == OPERATOR) && ((*right)->type == NUM))
+        {
+            tree->changes_num++;
+            copy_node = Copynator((*node)->left);
 
-        if (((*right)->data.value == 1) && ((*node)->data.value_op == OP_MUL)) 
-        {
-            DeleteNode(*node);
-            *node = copy_node;
-        }
-        else if (((*right)->data.value == 1) && ((*node)->data.value_op == OP_DIV)) 
-        {
-            DeleteNode(*node);
-            *node = copy_node;
-        }
-        else if (((*right)->data.value == 0) && ((*node)->data.value_op == OP_ADD))
-        {
-            DeleteNode(*node);
-            *node = copy_node;
-        }
-        else if (((*right)->data.value == 0) && ((*node)->data.value_op == OP_SUB))
-        {
-            DeleteNode(*node);
-            *node = copy_node;
-        }
-        else if (((*right)->data.value == 0) && ((*node)->data.value_op == OP_MUL))
-        {
-            DeleteNode(*node);
-            DeleteNode(copy_node);
-            *node = CreateNode(NUM, 0 , NULL, NULL);
-        }
-        else if (((*right)->data.value == 0) && ((*node)->data.value_op == OP_DIV))
-        {
-            // delete 0
-        }
-        else 
-        {
-            DeleteNode(copy_node);
-            tree->changes_num--;
-            RemoveDummyElements(tree, left);
-            RemoveDummyElements(tree, right);
+            if (((*right)->data.value == 1) && ((*node)->data.value_op == OP_MUL)) 
+            {
+                DeleteNode(*node);
+                *node = copy_node;
+            }
+            else if (((*right)->data.value == 1) && ((*node)->data.value_op == OP_DIV)) 
+            {
+                DeleteNode(*node);
+                *node = copy_node;
+            }
+            else if (((*right)->data.value == 0) && ((*node)->data.value_op == OP_ADD))
+            {
+                DeleteNode(*node);
+                *node = copy_node;
+            }
+            else if (((*right)->data.value == 0) && ((*node)->data.value_op == OP_SUB))
+            {
+                DeleteNode(*node);
+                *node = copy_node;
+            }
+            else if (((*right)->data.value == 0) && ((*node)->data.value_op == OP_MUL))
+            {
+                printf("AAA???");
+                DeleteNode(*node);
+                DeleteNode(copy_node);
+                *node = CreateNode(NUM, 0 , NULL, NULL);
+            }
+            else if (((*right)->data.value == 0) && ((*node)->data.value_op == OP_DIV))
+            {
+                // delete 0
+            }
+            else 
+            {
+                DeleteNode(copy_node);
+                tree->changes_num--;
+                RemoveDummyElements(tree, left);
+                RemoveDummyElements(tree, right);
+            }
         }
     }
     else if (((*node)->type == OPERATOR) && ((*left)->type == NUM))
@@ -240,6 +253,7 @@ TreeError RemoveDummyElements(Tree* tree, Node** node)
         }
         else if (((*left)->data.value == 0) && ((*node)->data.value_op == OP_MUL))
         {
+            printf("AAA???");
             DeleteNode(*node);
             DeleteNode(copy_node);
             *node = CreateNode(NUM, 0 , NULL, NULL);
@@ -327,9 +341,23 @@ TreeError Simplification(Tree* tree)
     return NO_ERROR;
 }
 
-TreeError PrintfLatex(Tree* tree, Tree* tree_dif)
+TreeError PrintfLatex(Tree* tree, Table* names)
 {
     FILE* To = fopen("latex.txt", "w");
+
+    Tree tree_dif = {};
+    Tree tree_tay = {};
+    tree_dif.num_names = 1;
+    tree_tay.num_names = 1;
+    tree_dif.changes_num = 0;
+    tree_tay.changes_num = 0;
+
+    tree_dif.root = Differentiator(tree->root, names[0]);
+    Simplification(&tree_dif);
+    printf("||");
+    tree_tay.root = MaclaurinExpansion(tree, 3, names);
+    Simplification(&tree_tay);
+    GraphicDump(&tree_tay, NULL);
 
     fprintf(To, "\\documentclass[a4paper,12pt]{article}\n"
                 "\\usepackage[T1]{fontenc}\n"
@@ -338,25 +366,175 @@ TreeError PrintfLatex(Tree* tree, Tree* tree_dif)
                 "\\usepackage{amsmath,amsfonts,amssymb,amsthm,mathtools}\n"
                 "\\usepackage[left=10mm, top=10mm, right=10mm, bottom=20mm, nohead, nofoot]{geometry}\n"
                 "\\usepackage{wasysym}\n"
-                "\\author{\\LARGEМерзляков Арсений Б01-304}\n"
-                "\\title{Производная}\n"
+                "\\author{\\LARGEКузнецов Ярослав Б01-306}\n"
+                "\\title{Решение контрольной работы второго класса}\n"
                 "\\pagestyle {empty}\n"
                 "\\begin{document}\n"
                 "\\maketitle\n"
                 "\\begin{flushleft}\n"
-                "\\Large\n"
-                "$(cosx)^{sinx}\\cdot (cosx\\cdot \\ln{(cosx)}+sinx\\cdot \\dfrac{1.000}{cosx}\\cdot sinx\\cdot (-1.000))$\n"
-                "\\end{flushleft}\n"
-                "\\end{document}\n");
-    printf("Вашему вниманию представляется контрольная работа советского второклассника\n"
-           "Это задание, было дано ученику первым номером, как самое простое\n"
-           "1. Найдите производную f(x);\n"
-           "2. Найдите производную в точке x0 f(x0);\n"
-           "3. Разложите f(x) по формуле Тейлора при X --> 0;\n");
-
+                "\\Large\n");
     
+    fprintf(To, "   Вашему вниманию представляется контрольная работа советского второклассника.\\\\\n"
+                "   Это задание, было дано ученику первым номером, как самое простое:\\\\\n"
+                "1. Найдите производную f(x);\\\\\n"
+                "2. Разложите f(x) по формуле Тейлора при x --> 0;\\\\\n"
+                "3. И тд.\\\\\n");
 
 
+                //"$(cosx)^{sinx}\\cdot (cosx\\cdot \\ln{(cosx)}+sinx\\cdot \\dfrac{1.000}{cosx}\\cdot sinx\\cdot (-1.000))$\n"
+                
+    fprintf(To, "f (x) = $");
+    LatexPrintNode(tree->root, To);
+    
+    fprintf(To, "\\\\\n");
+    fprintf(To, "   Производная высчитывается при помощи элементарых правил арифметики и очевидных преобразований\\\\\n");
+
+    fprintf(To, "f'(x) = $");
+    LatexPrintNode(tree_dif.root, To);
+    fprintf(To, "\\\\\n");
+    
+    fprintf(To, "   Разложение по Макарону:\\\\\n");
+    fprintf(To, "f(x) = ");
+    LatexPrintNode(tree_tay.root, To);
+    
+    fprintf(To, " + o( x ^ 5 )\\\\\n");
+
+    fprintf(To, "\\end{flushleft}\n"
+                "\\end{document}\n");
+
+    fclose(To);
+    DeleteNode(tree_dif.root);
+    DeleteNode(tree_tay.root);
+
+    return NO_ERROR;
+}
+
+void PrintTangentEquation(Tree* tree, FILE* To, Table* names)
+{
+    fprintf(To, " %lg ", Evaluate(tree, tree->root, names));
+
+    Tree tree_dif = {};
+    tree_dif.root = Differentiator(tree->root, names[0]);
+    tree_dif.num_names = 1;
+
+    fprintf(To, " + %lg ", Evaluate(&tree_dif, tree_dif.root, names));
+    fprintf(To, " * ( %s - %lg )", names[0].var_name, names[0].var_value);
+
+    DeleteNode(tree_dif.root);
+}
+
+Node* MaclaurinExpansion(Tree* tree, size_t power, Table* names)
+{
+    char str[128] = {};
+
+    Tree dif_next = {};
+    Tree dif_prev = {};
+    Tree tree_tay = {};
+    Node** current = &(tree_tay.root);
+
+    dif_prev.root = Copynator(tree->root);
+    dif_prev.num_names = tree->num_names;
+    size_t i = 0;
+    for (i = 0; i <= power; i++)
+    {
+        // if (latex == true)
+        // {
+        //     // fprintf(To, " + \\dfrac{%lg}{%lu} ", Evaluate(&dif_prev, dif_prev.root, names), Factorial(i));
+        //     // fprintf(To, " \\cdot (x ^ {%lu})", i);
+        // }
+        // else
+        // {
+            *current = CreateNode(OPERATOR, OP_ADD, CreateNode(OPERATOR, OP_MUL, 
+                                                                                CreateNode(OPERATOR, OP_DIV, 
+                                                                                                            CreateNode(NUM, Evaluate(&dif_prev, dif_prev.root, names), NULL, NULL), 
+                                                                                                            CreateNode(NUM, Factorial(i), NULL, NULL)),
+                                                                                CreateNode(FUNCTION, FUN_POW,
+                                                                                                            CreateNode(VAR, 0, NULL, NULL),
+                                                                                                            CreateNode(NUM, i, NULL, NULL))), 
+                                                    NULL);
+            current = &((*current)->right);
+
+            // fprintf(To, " + (%lg) ", Evaluate(&dif_prev, dif_prev.root, names) / Factorial(i));
+            // fprintf(To, " * (x ** %lu)", i);
+        //}
+        
+        dif_next.root = Differentiator(dif_prev.root, names[0]);
+        dif_next.num_names = 1;
+
+        DeleteNode(dif_prev.root);
+        dif_prev.root = dif_next.root;
+        dif_next.root = NULL;
+    }
+
+    DeleteNode(dif_prev.root);
+
+    return tree_tay.root;
+}
 
 
+size_t Factorial(size_t n)
+{
+    if (n == 0)
+        return 1;
+    
+    return (n * Factorial(n - 1));
+}
+
+
+void BuildGraphic(char Type[], char ToGnuplot[], char FromGnuplot[], char* function1, char* function2, char xrange[], char yrange[], char title[])
+{
+    char str[1024]   = {};
+    char func1[256]  = {};
+    char betwen[3]   = {};
+    char func2[256]  = {};
+    char temp[64]    = {};
+
+
+    sprintf(str,  "set terminal %s size 800, 600\n", Type);
+
+    sprintf(temp, "set output \"%s\"\n", ToGnuplot);
+
+    strcat(str, temp);
+
+    sprintf(temp, "set xlabel \"X\"\n" "set ylabel \"F(X)\"\n" "set grid\n");
+
+    strcat(str, temp);
+
+    if (yrange)
+        sprintf(temp, "set yrange%s\n", yrange);
+    else
+        sprintf(temp, "set yrange[-3:3]\n");
+
+    strcat(str, temp);
+    
+    if (xrange)
+        sprintf(temp, "set xrange%s\n", xrange);
+    else
+        sprintf(temp, "set xrange[-20:20]\n");
+
+    strcat(str, temp);
+
+    sprintf(temp, "set title \"%s\" font \"Helvetica Bold, 20\"\n", title);
+
+    strcat(str, temp);
+
+    strcat(str, "set terminal png size 800, 600\n""plot ");
+
+    if (function1)
+        sprintf(func1, "%s lc rgb \"red\"", function1);
+    if ((function1) && (function2))
+        sprintf(betwen, "%s", ",");
+    if (function2)
+        sprintf(func2, "%s lc rgb \"green\"", function2);
+
+    FILE* ToGnup = fopen(FromGnuplot, "w");
+    fprintf(ToGnup, "%s %s %s %s", str, func1, betwen, func2);
+    fclose(ToGnup);
+}
+
+void ReadReadyFunctionFrom(char* function, char* filename)
+{
+    FILE* From = fopen(filename, "r");
+    fread(function, Get_Size_File(filename), 1, From);
+    fclose(From);
 }

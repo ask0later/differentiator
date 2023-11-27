@@ -31,8 +31,81 @@ Node* CreateNode(Type type, double value, Node* left, Node* right)
         node->data.value = value;
     else if (node->type == FUNCTION)
         node->data.value_fun = (Functions) value;
+    else if (node->type == VAR)
+        node->data.variable = strdup("x");
 
     return node;
+}
+
+TreeError LatexPrintNode(Node* node, FILE* To)
+{
+    if (!node) {return NO_ERROR;}
+    if (To == NULL) {return FILE_NOT_OPEN;}
+    
+    TreeError error = NO_ERROR;
+    
+    fprintf(To, "( ");
+
+    Order order = IN_ORDER;
+    if (node->type == OPERATOR)
+    {
+        if (node->data.value_op == OP_DIV)
+            order = PRE_ORDER;
+    }
+
+    if (order == PRE_ORDER)
+    {
+        LatexPrintObject(node, To);
+        fprintf(To, "{ "); // for defra
+    }
+
+    if (node->left)
+    {
+        error = LatexPrintNode(node->left, To);
+        if (error != NO_ERROR)
+            return error;
+    }
+
+    if (order == PRE_ORDER)
+    {
+        fprintf(To, " } "); // for defra
+    }
+
+    if (order == IN_ORDER)
+        LatexPrintObject(node, To);
+    
+    if (node->type == FUNCTION)
+    {
+        if ((node->data.value_fun == FUN_LN) || (node->data.value_fun == FUN_POW))
+            fprintf(To, "{");
+    }
+
+    if (order == PRE_ORDER)
+    {
+        fprintf(To, "{ "); // for defra
+    }
+
+    if (node->right)
+    {
+        error = LatexPrintNode(node->right, To);
+        if (error != NO_ERROR)
+            return error;
+    }
+    
+    if (order == PRE_ORDER)
+    {
+        fprintf(To, " } "); // for defra
+    }
+
+    if (node->type == FUNCTION)
+    {
+        if ((node->data.value_fun == FUN_LN) || (node->data.value_fun == FUN_POW))
+            fprintf(To, "}");
+    }
+
+    fprintf(To, " ) ");
+    
+    return NO_ERROR;
 }
 
 TreeError PrintNode(Node* node, FILE* To, Order order_value)
@@ -42,7 +115,6 @@ TreeError PrintNode(Node* node, FILE* To, Order order_value)
     
     TreeError error = NO_ERROR;
 
-    //if ((node->type == OPERATOR) && ((node->data.value_op == OP_ADD) || (node->data.value_op == OP_SUB)))
     fprintf(To, "( ");
 
     if (order_value == PRE_ORDER)
@@ -71,10 +143,26 @@ TreeError PrintNode(Node* node, FILE* To, Order order_value)
         PrintObject(node, To);
 
     fprintf(To, " ) ");
-    // if ((node->type == OPERATOR) && ((node->data.value_op == OP_ADD) || (node->data.value_op == OP_SUB)))
-    //     fprintf(To, ") ");
 
     return NO_ERROR;
+}
+
+void LatexPrintObject(Node* node, FILE* To)
+{
+    if (node->type == NUM)
+        fprintf(To, "%lg", node->data.value);
+    else if (node->type == OPERATOR)
+    {
+        LatexPrintOperator(node->data.value_op, To);
+    }
+    else if (node->type == FUNCTION)
+    {
+        PrintFunction(node->data.value_fun, To);
+    }
+    else if (node->type == VAR)
+    {
+        fprintf(To, "%s", node->data.variable);
+    }
 }
 
 void PrintObject(Node* node, FILE* To)
@@ -91,7 +179,7 @@ void PrintObject(Node* node, FILE* To)
     }
     else if (node->type == VAR)
     {
-        printf("%s", node->data.variable);
+        fprintf(To, "%s", node->data.variable);
     }
 }
 
@@ -119,6 +207,29 @@ void PrintFunction(Functions value_Functions, FILE* To)
             break;
     }
 }
+
+void LatexPrintOperator(Operators value_Operators, FILE* To)
+{
+    switch(value_Operators)
+    {
+        case OP_ADD:
+            fprintf(To, " + ");
+            break;
+        case OP_SUB:
+            fprintf(To, " - ");
+            break;
+        case OP_MUL:
+            fprintf(To, " \\cdot ");
+            break;
+        case OP_DIV:
+            fprintf(To, " \\dfrac ");
+            break;
+        default:
+            printf("extra");
+            break;
+    }
+}
+
 void PrintOperator(Operators value_Operators, FILE* To)
 {
     switch(value_Operators)
@@ -176,17 +287,10 @@ TreeError PasteObject(Tree* tree, char* source, Node** node, Table* names)
         {
             (*node)->num_args = cmds[i].num_args;
             (*node)->type  = cmds[i].type;
-            //printf("num_atgs = %d type = %d\n", (*node)->num_args, (*node)->type);
             if ((*node)->type == OPERATOR)
-            {
                 (*node)->data.value_op  = (Operators) cmds[i].value;
-                //printf("op = %d\n", (*node)->data.value_op);
-            }
             else if ((*node)->type == FUNCTION)
-            {
                 (*node)->data.value_fun = (Functions) cmds[i].value;
-                //printf("fun = %d\n", (*node)->data.value_fun);
-            }
             return NO_ERROR;
         }
     }
