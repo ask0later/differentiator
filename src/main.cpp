@@ -9,11 +9,11 @@ int main()
     Text buffer = {};
     Tree tree   = {};
     Tree tree_dif = {};
-    Tree tree_tay = {};
+
     ConstructorTree(&tree);
     ConstructorTree(&tree_dif);
 
-    Table names[MAX_NUM_VARS] = {};
+    Var names[MAX_NUM_VARS] = {};
 
     CreateBuffer(&buffer, "file.txt");
 
@@ -27,15 +27,8 @@ int main()
         return 1;
     }
     Simplification(&tree);
-    PrintNode(tree.root, stdout, IN_ORDER);
-    printf("\n");
+    // PrintNode(tree.root, stdout, IN_ORDER);
 
-
-    // tree_tay.root = MaclaurinExpansion(&tree, 3, names);
-    // GraphicDump(&tree_tay, NULL);
-
-
-    // DeleteNode(tree_tay.root);
     PrintfLatex(&tree, names);
 
     // names[0].var_value = 0;
@@ -62,8 +55,8 @@ int main()
     // fclose(TangetFunc);
     // ReadReadyFunctionFrom(function3, "tanget.txt");
     
-    // BuildGraphic("png", "function2.png", "function2.txt", function1, function3, "[-3:3]", "[-10:10]", "Function and Tanget");
-    // system("gnuplot -c function2.txt");
+    //BuildGraphic("png", "function2.png", "function2.txt", function1, function3, "[-3:3]", "[-10:10]", "Function and Tanget");
+    //system("gnuplot -c function2.txt");
     
     //GraphicDump(&tree, NULL);
 

@@ -11,7 +11,67 @@ TreeError ConstructorTree(Tree* tree)
     return NO_ERROR;
 }
 
-Node* CreateNode(Type type, double value, Node* left, Node* right)
+Node* CreateVariable(char* value, Node* left, Node* right)
+{
+    Node* node = (Node*) calloc(1, sizeof(Node));
+    if (!node) {return 0;}
+
+    node->left   = left;
+    node->right  = right;
+
+    node->type = VAR;
+
+    node->data.variable = strdup(value);
+
+    return node;
+}
+
+Node* CreateNumber(double value, Node* left, Node* right)
+{
+    Node* node = (Node*) calloc(1, sizeof(Node));
+    if (!node) {return 0;}
+
+    node->left   = left;
+    node->right  = right;
+
+    node->type = NUM;
+
+    node->data.value = value;
+
+    return node;
+}
+
+Node* CreateOperator(Operators value, Node* left, Node* right)
+{
+    Node* node = (Node*) calloc(1, sizeof(Node));
+    if (!node) {return 0;}
+
+    node->left   = left;
+    node->right  = right;
+
+    node->type = OPERATOR;
+
+    node->data.value_op = value;
+
+    return node;
+}
+
+Node* CreateFunction(Functions value, Node* left, Node* right)
+{
+    Node* node = (Node*) calloc(1, sizeof(Node));
+    if (!node) {return 0;}
+
+    node->left   = left;
+    node->right  = right;
+
+    node->type = FUNCTION;
+
+    node->data.value_fun = value;
+
+    return node;
+}
+
+Node* CreateNode(Type type, void* value, Node* left, Node* right)
 {
     Node* node = (Node*) calloc(1, sizeof(Node));
     if (!node) {return 0;}
@@ -25,14 +85,24 @@ Node* CreateNode(Type type, double value, Node* left, Node* right)
     // node->data.value_fun = NO_FUN;
     // node->data.variable  = NULL;
 
-    if (node->type == OPERATOR)
-        node->data.value_op  = (Operators) value;
-    else if (node->type == NUM)
-        node->data.value = value;
-    else if (node->type == FUNCTION)
-        node->data.value_fun = (Functions) value;
-    else if (node->type == VAR)
-        node->data.variable = strdup("x");
+    switch (node->type)
+    {
+    case NUM:
+        node->data.value = *((double*) value);
+        break;
+    case OPERATOR:
+        node->data.value_op  = *((Operators*) value);
+        break;
+    case FUNCTION:
+        node->data.value_fun = *((Functions*) value);
+        break;
+    case VAR:
+        node->data.variable = strdup((const char*) value);
+        break;
+
+    default:
+        break;
+    }
 
     return node;
 }
@@ -44,7 +114,8 @@ TreeError LatexPrintNode(Node* node, FILE* To)
     
     TreeError error = NO_ERROR;
     
-    fprintf(To, "( ");
+    if ((node->type != NUM) && (node->type != VAR))
+        fprintf(To, "( ");
 
     Order order = IN_ORDER;
     if (node->type == OPERATOR)
@@ -103,7 +174,8 @@ TreeError LatexPrintNode(Node* node, FILE* To)
             fprintf(To, "}");
     }
 
-    fprintf(To, " ) ");
+    if ((node->type != NUM) && (node->type != VAR))
+        fprintf(To, " ) ");
     
     return NO_ERROR;
 }
@@ -277,7 +349,7 @@ void DeleteNode(Node* node)
 }
 
 
-TreeError PasteObject(Tree* tree, char* source, Node** node, Table* names)
+TreeError PasteObject(Tree* tree, char* source, Node** node, Var* names)
 {
     double value = 0;
 
@@ -306,16 +378,16 @@ TreeError PasteObject(Tree* tree, char* source, Node** node, Table* names)
 
         for (size_t i = 0; i < MAX_NUM_VARS - 1; i++)
         {
-            if (strcmp(source, names[i].var_name) == 0)
+            if (strcmp(source, names[i].name) == 0)
             {
-                (*node)->data.variable = strdup(names[i].var_name);
+                (*node)->data.variable = strdup(names[i].name);
                 return NO_ERROR;
             }
         }
 
         (*node)->data.variable = strdup(source);
         names[tree->num_names].name_size = strlen(source);
-        memcpy(names[tree->num_names].var_name, (*node)->data.variable, names[tree->num_names].name_size);
+        memcpy(names[tree->num_names].name, (*node)->data.variable, names[tree->num_names].name_size);
         tree->num_names++;
     }
 
@@ -323,7 +395,7 @@ TreeError PasteObject(Tree* tree, char* source, Node** node, Table* names)
 }
 
 
-TreeError ReadTree(Tree* tree, Node** node, char** position, Order order_value, Table* names, Text buffer)
+TreeError ReadTree(Tree* tree, Node** node, char** position, Order order_value, Var* names, Text buffer)
 {
     if (*position - buffer.position >= (long int) buffer.size_buffer) {return READER_ERROR;}
 
@@ -334,7 +406,7 @@ TreeError ReadTree(Tree* tree, Node** node, char** position, Order order_value, 
 
     if (**position == '(')
     {
-        *node = CreateNode(NO_TYPE, 0, NULL, NULL);
+        *node = CreateNode((Type) NULL, 0, NULL, NULL);
 
         tree->size++;
 
@@ -342,7 +414,7 @@ TreeError ReadTree(Tree* tree, Node** node, char** position, Order order_value, 
 
         char* start_posirion = *position;
 
-        Node* node_temp = CreateNode(NO_TYPE, 0, NULL, NULL);
+        Node* node_temp = CreateNode((Type) NULL, 0, NULL, NULL);
 
         SkipSpaces(position);
         ReadObject(source, position);

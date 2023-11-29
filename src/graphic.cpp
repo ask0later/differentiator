@@ -51,6 +51,9 @@ TreeError GraphicDumpNode(Node* node)
             case OP_DIV:
                 sprintf(str, " / ");
                 break;
+            default:
+                printf("extra");
+                break;
         }
     }
     else if (node->type == FUNCTION)
@@ -72,6 +75,9 @@ TreeError GraphicDumpNode(Node* node)
                 break;
             case FUN_LN:
                 sprintf(str, " ln ");
+                break;
+            default:
+                printf("extra");
                 break;
         }
     }

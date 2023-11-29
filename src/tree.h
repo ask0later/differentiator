@@ -31,8 +31,7 @@ enum UnaryorBinary
 
 enum Type
 {
-    NO_TYPE,
-    NUM,
+    NUM = 1,
     OPERATOR,
     FUNCTION,
     VAR
@@ -40,8 +39,7 @@ enum Type
 
 enum Operators
 {
-    NO_OP,
-    OP_ADD,
+    OP_ADD = 1,
     OP_SUB,
     OP_MUL,
     OP_DIV
@@ -49,8 +47,7 @@ enum Operators
 
 enum Functions
 {
-    NO_FUN,
-    FUN_SIN,
+    FUN_SIN = 1,
     FUN_COS,
     FUN_POW,
     FUN_SQRT,
@@ -66,11 +63,11 @@ struct Command
     UnaryorBinary num_args;
 };
 
-struct Table
+struct Var
 {
-    char var_name[MAX_SIZE_NAME];
-    double             var_value;
-    size_t             name_size;
+    char name[MAX_SIZE_NAME];
+    double             value;
+    size_t         name_size;
 };
 
 
@@ -148,7 +145,13 @@ TreeError ConstructorTree(Tree* tree);
 void       DestructorTree(Tree* tree);
 
 
-Node* CreateNode(Type type, double value, Node* left, Node* right);
+Node* CreateNode(Type type, void* value, Node* left, Node* right);
+
+Node* CreateVariable(char* value, Node* left, Node* right);
+Node* CreateNumber(double value, Node* left, Node* right);
+Node* CreateOperator(Operators value, Node* left, Node* right);
+Node* CreateFunction(Functions value, Node* left, Node* right);
+
 void DeleteNode(Node* node);
 
 TreeError  PrintNode(Node* node, FILE*   To, Order order_value);
@@ -161,10 +164,10 @@ void LatexPrintObject(Node* node, FILE* To);
 void LatexPrintOperator(Operators value_Operators, FILE* To);
 
 
-TreeError ReadTree(Tree* tree, Node** node, char** position, Order order_value, Table* names, Text buffer);
+TreeError ReadTree(Tree* tree, Node** node, char** position, Order order_value, Var* names, Text buffer);
 TreeError SkipSpaces(char** position);
 TreeError ReadObject(char* source, char** position);
-TreeError PasteObject(Tree* tree, char* source, Node** node, Table* names);
+TreeError PasteObject(Tree* tree, char* source, Node** node, Var* names);
 
 
 
