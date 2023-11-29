@@ -294,7 +294,6 @@ TreeError RemoveDummyElements(Tree* tree, Node** node)
     
     Node** left  = &(*node)->left;
     Node** right = &(*node)->right;
-    double value = 0;
 
     Node* copy_node = {};
 
@@ -319,7 +318,7 @@ TreeError RemoveDummyElements(Tree* tree, Node** node)
                 return NO_ERROR;
             }
 
-            //check |= isMul0(*node, *right);
+            check |= isMul0(*node, *right);
 
             if (check == true)
             {
@@ -528,6 +527,7 @@ TreeError PrintfLatex(Tree* tree, Var* names)
     fprintf(To, "   Производная высчитывается при помощи элементарых правил арифметики и очевидных преобразований\\\\\n");
 
     tree_dif.root = Differentiator(tree->root, names[0], To, true);
+    
     Simplification(&tree_dif);
 
     GraphicDump(tree, &tree_dif);
@@ -555,6 +555,8 @@ TreeError PrintfLatex(Tree* tree, Var* names)
     return NO_ERROR;
 }
 
+
+
 void PrintTangentEquation(Tree* tree, FILE* To, Var* names)
 {
     fprintf(To, " %lg ", Evaluate(tree, tree->root, names));
@@ -569,9 +571,11 @@ void PrintTangentEquation(Tree* tree, FILE* To, Var* names)
     DeleteNode(tree_dif.root);
 }
 
+
 void PrintSolutionDiff(Node* node, FILE* To)
 {
-    size_t i = (size_t)(rand() % NUM_PHRASES);
+    int x = (rand() + 1) / rand() + 0.7 * rand();
+    size_t i = (size_t)(x % NUM_PHRASES);
 
     fprintf(To, "%s\n\\\\$", funny_phrases[i]);
     fprintf(To, "(");
@@ -596,67 +600,13 @@ void PrintSolutionDiff(Node* node, FILE* To)
     {
         switch(node->data.value_op)
         {
-            case OP_ADD:    
-                            fprintf(To, "(");
-                            LatexPrintNode(node->left, To);
-                            fprintf(To, ")'");
-                            fprintf(To, " + ");
-                            fprintf(To, "(");
-                            LatexPrintNode(node->right, To);
-                            fprintf(To, ")'");  
-                            break;
+            case OP_ADD:    LatexPrintAdd(node, To); break;
             
-            case OP_SUB:    fprintf(To, "(");
-                            LatexPrintNode(node->left, To);
-                            fprintf(To, ")'");
-                            fprintf(To, " - ");
-                            fprintf(To, "(");
-                            LatexPrintNode(node->right, To);
-                            fprintf(To, ")'");  
-                            break;
+            case OP_SUB:    LatexPrintSub(node, To); break;
         
-            case OP_MUL:    fprintf(To, "(");
-                            LatexPrintNode(node->left, To);
-                            fprintf(To, ")'");
-                            fprintf(To, " \\cdot ");
-                            fprintf(To, "(");
-                            LatexPrintNode(node->right, To);
-                            fprintf(To, ")");
-                            fprintf(To, " + ");
-                            fprintf(To, "(");
-                            LatexPrintNode(node->left, To);
-                            fprintf(To, ")");
-                            fprintf(To, " \\cdot ");
-                            fprintf(To, "(");
-                            LatexPrintNode(node->right, To);
-                            fprintf(To, ")'");    
-                            break;  
+            case OP_MUL:    LatexPrintMul(node, To); break;  
             
-            case OP_DIV:    fprintf(To, " \\dfrac ");
-                            fprintf(To, "{ (");
-                            LatexPrintNode(node->left, To);
-                            fprintf(To, ")'");
-                            fprintf(To, " \\cdot ");
-                            fprintf(To, "(");
-                            LatexPrintNode(node->right, To);
-                            fprintf(To, ")");
-                            fprintf(To, " - ");
-                            fprintf(To, "(");
-                            LatexPrintNode(node->left, To);
-                            fprintf(To, ")");
-                            fprintf(To, " \\cdot ");
-                            fprintf(To, "(");
-                            LatexPrintNode(node->right, To);
-                            fprintf(To, ")' }");
-                            fprintf(To, "{ ");
-                            fprintf(To, "(");
-                            LatexPrintNode(node->right, To);
-                            fprintf(To, ")");
-                            fprintf(To, " \\cdot ");
-                            fprintf(To, "(");
-                            LatexPrintNode(node->right, To);
-                            fprintf(To, ")");
-                            break;
+            case OP_DIV:    LatexPrintDiv(node, To); break;
           
             default:
                 printf("extra error");
@@ -668,44 +618,20 @@ void PrintSolutionDiff(Node* node, FILE* To)
     {
         switch(node->data.value_fun)
         {
-            case FUN_SIN:   fprintf(To, "(");
-                            LatexPrintNode(node->right, To);
-                            fprintf(To, ")'");
-                            fprintf(To, " \\cdot ");
-                            fprintf(To, " cos(");
-                            LatexPrintNode(node->right, To);
-                            fprintf(To, ") ");
-                            break;
+            case FUN_SIN:   LatexPrintSin(node, To); break;
             
-            case FUN_COS:   fprintf(To, "-(");
-                            LatexPrintNode(node->right, To);
-                            fprintf(To, ")'");
-                            fprintf(To, " \\cdot ");
-                            fprintf(To, " sin(");
-                            LatexPrintNode(node->right, To);
-                            fprintf(To, ") ");
-                            break;
+            case FUN_COS:   LatexPrintCos(node, To); break;
 
             case FUN_POW:  
                 if (node->right->type == NUM)
                 {   
-                            fprintf(To, "(");
-                            LatexPrintNode(node->left, To);
-                            fprintf(To, ")'");
-                            fprintf(To, " \\cdot ");
-                            fprintf(To, "(");
-                            LatexPrintNode(node->right, To);
-                            fprintf(To, ")");
-                            fprintf(To, " \\cdot ");
-                            fprintf(To, "(");
-                            LatexPrintNode(node->left, To);
-                            fprintf(To, ") ");
-                            fprintf(To, "^ {");
-                            fprintf(To, "%lg", node->right->data.value - 1);
-                            fprintf(To, "} ");
-                            break;
+                            LatexPrintPow(node, To); break;
                 }
                 else if (node->left->type == NUM)
+                {
+                            LatexPrintExp(node, To); break;
+                }
+                else
                 {
                             fprintf(To, "(");
                             LatexPrintNode(node->left, To);
@@ -718,43 +644,14 @@ void PrintSolutionDiff(Node* node, FILE* To)
                             LatexPrintNode(node->right, To);
                             fprintf(To, ")");   
                             break;
+                    
+                    //return _MUL(_ADD(_DIV(_MUL(_d(node->left), _c(node->right)), _c(node->left)), _MUL(_LN(NULL, _c(node->left)), _d(node->right))), _c(node));
                 }
-            //     else
-            //     {
-            //         return _MUL(_ADD(_DIV(_MUL(_d(node->left), _c(node->right)), _c(node->left)), _MUL(_LN(NULL, _c(node->left)), _d(node->right))), _c(node));
-            //                 // CreateOperator(OP_MUL,
-            //                 //                             CreateOperator(OP_ADD, 
-            //                 //                                                         CreateOperator(OP_DIV, 
-            //                 //                                                                                     CreateOperator(OP_MUL, Differentiator(node->left, name), Copynator(node->right)),
-            //                 //                                                                                     Copynator(node->left)),
-            //                 //                                                         CreateOperator(OP_MUL,
-            //                 //                                                                                     CreateFunction(FUN_LN, NULL, Copynator(node->left)),
-            //                 //                                                                                     Differentiator(node->right, name))),
-            //                 //                             Copynator(node));
-            //     }
 
             
-            case FUN_SQRT:  fprintf(To, " \\dfrac {");
-                            fprintf(To, "(");
-                            LatexPrintNode(node->right, To);
-                            fprintf(To, ")'}");
-                            fprintf(To, "{(2");
-                            fprintf(To, " \\cdot ");
-                            LatexPrintNode(node, To);
-                            fprintf(To, ")}");
-                            break; 
+            case FUN_SQRT:  LatexPrintSqrt(node, To); break; 
 
-            case FUN_LN:    fprintf(To, "(");
-                            LatexPrintNode(node->right, To);
-                            fprintf(To, ")'");
-                            fprintf(To, " \\cdot ");
-                            fprintf(To, "( ");
-                            fprintf(To, " \\dfrac {1}");
-                            LatexPrintNode(node->left, To);
-                            fprintf(To, "{");
-                            LatexPrintNode(node->right, To);
-                            fprintf(To, "})");
-                            break;  
+            case FUN_LN:    LatexPrintLn(node, To); break;  
             
             
             default:
@@ -765,6 +662,161 @@ void PrintSolutionDiff(Node* node, FILE* To)
     fprintf(To, "\\\\\n");
 
     return;
+}
+
+
+void LatexPrintAdd(Node* node, FILE* To)
+{
+    fprintf(To, "(");
+    LatexPrintNode(node->left, To);
+    fprintf(To, ")'");
+    fprintf(To, " + ");
+    fprintf(To, "(");
+    LatexPrintNode(node->right, To);
+    fprintf(To, ")'"); 
+}
+
+void LatexPrintSub(Node* node, FILE* To)
+{
+    fprintf(To, "(");
+    LatexPrintNode(node->left, To);
+    fprintf(To, ")'");
+    fprintf(To, " - ");
+    fprintf(To, "(");
+    LatexPrintNode(node->right, To);
+    fprintf(To, ")'"); 
+}
+
+void LatexPrintMul(Node* node, FILE* To)
+{
+    fprintf(To, "(");
+    LatexPrintNode(node->left, To);
+    fprintf(To, ")'");
+    fprintf(To, " \\cdot ");
+    fprintf(To, "(");
+    LatexPrintNode(node->right, To);
+    fprintf(To, ")");
+    fprintf(To, " + ");
+    fprintf(To, "(");
+    LatexPrintNode(node->left, To);
+    fprintf(To, ")");
+    fprintf(To, " \\cdot ");
+    fprintf(To, "(");
+    LatexPrintNode(node->right, To);
+    fprintf(To, ")'");
+}
+
+void LatexPrintDiv(Node* node, FILE* To)
+{
+    fprintf(To, " \\dfrac ");
+    fprintf(To, "{ (");
+    LatexPrintNode(node->left, To);
+    fprintf(To, ")'");
+    fprintf(To, " \\cdot ");
+    fprintf(To, "(");
+    LatexPrintNode(node->right, To);
+    fprintf(To, ")");
+    fprintf(To, " - ");
+    fprintf(To, "(");
+    LatexPrintNode(node->left, To);
+    fprintf(To, ")");
+    fprintf(To, " \\cdot ");
+    fprintf(To, "(");
+    LatexPrintNode(node->right, To);
+    fprintf(To, ")' }");
+    fprintf(To, "{ ");
+    fprintf(To, "(");
+    LatexPrintNode(node->right, To);
+    fprintf(To, ")");
+    fprintf(To, " \\cdot ");
+    fprintf(To, "(");
+    LatexPrintNode(node->right, To);
+    fprintf(To, ")");
+}
+
+void LatexPrintExpandPow(Node* node, FILE* To)
+{
+
+}
+
+void LatexPrintExp(Node* node, FILE* To)
+{
+    fprintf(To, "(");
+    LatexPrintNode(node->left, To);
+    fprintf(To, ")'");
+    fprintf(To, " \\cdot ");
+    fprintf(To, "( (ln{");
+    LatexPrintNode(node->left, To);
+    fprintf(To, "})");
+    fprintf(To, " \\cdot ");
+    LatexPrintNode(node->right, To);
+    fprintf(To, ")");
+
+}
+
+void LatexPrintPow(Node* node, FILE* To)
+{
+    fprintf(To, "(");
+    LatexPrintNode(node->left, To);
+    fprintf(To, ")'");
+    fprintf(To, " \\cdot ");
+    fprintf(To, "(");
+    LatexPrintNode(node->right, To);
+    fprintf(To, ")");
+    fprintf(To, " \\cdot ");
+    fprintf(To, "(");
+    LatexPrintNode(node->left, To);
+    fprintf(To, ") ");
+    fprintf(To, "^ {");
+    fprintf(To, "%lg", node->right->data.value - 1);
+    fprintf(To, "} ");
+}
+
+void LatexPrintCos(Node* node, FILE* To)
+{
+    fprintf(To, "-(");
+    LatexPrintNode(node->right, To);
+    fprintf(To, ")'");
+    fprintf(To, " \\cdot ");
+    fprintf(To, " sin(");
+    LatexPrintNode(node->right, To);
+    fprintf(To, ") ");
+}
+
+void LatexPrintSin(Node* node, FILE* To)
+{
+    fprintf(To, "(");
+    LatexPrintNode(node->right, To);
+    fprintf(To, ")'");
+    fprintf(To, " \\cdot ");
+    fprintf(To, " cos(");
+    LatexPrintNode(node->right, To);
+    fprintf(To, ") ");
+}
+
+void LatexPrintSqrt(Node* node, FILE* To)
+{
+    fprintf(To, " \\dfrac {");
+    fprintf(To, "(");
+    LatexPrintNode(node->right, To);
+    fprintf(To, ")'}");
+    fprintf(To, "{(2");
+    fprintf(To, " \\cdot ");
+    LatexPrintNode(node, To);
+    fprintf(To, ")}");
+}
+void LatexPrintLn(Node* node, FILE* To)
+{
+    fprintf(To, "(");
+    LatexPrintNode(node->right, To);
+    fprintf(To, ")'");
+    fprintf(To, " \\cdot ");
+    fprintf(To, "( ");
+    fprintf(To, " \\dfrac {1}");
+    LatexPrintNode(node->left, To);
+    fprintf(To, "{");
+    LatexPrintNode(node->right, To);
+    fprintf(To, "})");
 }
 
 Node* TaylorExpansion(Tree* tree, size_t power, Var* names, Var var)
@@ -791,15 +843,7 @@ Node* TaylorExpansion(Tree* tree, size_t power, Var* names, Var var)
     for (i = 0; i <= power; i++)
     {
         *current = _ADD(_MUL(_DIV(_NUM(Evaluate(&dif_prev, dif_prev.root, names)), _NUM(Factorial(i))), _POW(_SUB(_VAR(names[0].name), _NUM(var.value)), _NUM((double) i))), NULL);
-        
-        // *current = CreateOperator(OP_ADD, CreateOperator(OP_MUL, 
-        //                                                                     CreateOperator(OP_DIV, 
-        //                                                                                                 CreateNumber(Evaluate(&dif_prev, dif_prev.root, names), NULL, NULL), 
-        //                                                                                                 CreateNumber(Factorial(i), NULL, NULL)),
-        //                                                                     CreateFunction(FUN_POW,
-        //                                                                                                 CreateVariable(names[0].var_name, NULL, NULL),
-        //                                                                                                 CreateNumber(i, NULL, NULL))),
-        //                                         NULL);
+    
         current = &((*current)->right);
 
         dif_next.root = Differentiator(dif_prev.root, names[0], NULL, false);

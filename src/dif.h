@@ -63,4 +63,17 @@ void PrintTangentEquation(Tree* tree, FILE* To, Var* names);
 void PrintSolutionDiff(Node* node, FILE* To);
 
 
+void       LatexPrintAdd(Node* node, FILE* To);
+void       LatexPrintSub(Node* node, FILE* To);
+void       LatexPrintMul(Node* node, FILE* To);
+void       LatexPrintDiv(Node* node, FILE* To);
+void LatexPrintExpandPow(Node* node, FILE* To);
+void       LatexPrintExp(Node* node, FILE* To);
+void       LatexPrintPow(Node* node, FILE* To);
+void       LatexPrintCos(Node* node, FILE* To);
+void       LatexPrintSin(Node* node, FILE* To);
+void      LatexPrintSqrt(Node* node, FILE* To);
+void        LatexPrintLn(Node* node, FILE* To);
+
+
 #endif
