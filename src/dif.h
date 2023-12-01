@@ -25,42 +25,32 @@ const char* const funny_phrases[NUM_PHRASES] = {"Я лучше промолчу:
                                           };
 
 
+//diff
 
-double Evaluate(Tree* tree, Node* node, Var* names);
-
-Node* Differentiator(Node* node, Var var, FILE* To, bool need_print);
+double Evaluate(Tree* tree, Node* node, Var* vars);
 
 Node* Copynator(Node* node);
-
-void PrintNameTable(Tree* tree, Var* names);
-
-
-TreeError CollapsingConstants(Tree* tree, Node** node);
-TreeError RemoveDummyElements(Tree* tree, Node** node);
-
-bool isMul1(Node* parent, Node* kid);
-bool isAdd0(Node* parent, Node* kid);
-bool isSub0(Node* parent, Node* kid);
-bool isPow1(Node* parent, Node* kid);
-bool isDiv1(Node* parent, Node* kid);
-bool isMul0(Node* parent, Node* kid);
-bool isDiv0(Node* parent, Node* kid);
-bool isPow0(Node* parent, Node* kid);
-
-TreeError Simplification(Tree* tree);
-
-Node* TaylorExpansion(Tree* tree, size_t power, Var* names, Var var);
+Node* Differentiator(Node* node, Var vars, FILE* To, bool need_print);
+Node* Taylortition(Tree* tree, size_t power, Var* vars, size_t real_var);
 
 size_t Factorial(size_t n);
 
+size_t GetRealVar(Var* vars);
+void PrintNameTable(Tree* tree, Var* vars);
 
-void ReadReadyFunctionFrom(char* function, char filename[]);
-void BuildGraphic(char Type[], char ToGnuplot[], char FromGnuplot[], char* function1, char* function2, char yrange[], char xrange[], char title[]);
+
+// gnuplot
+void ReadFromTextToBuffer(char* function, const char* filename);
+void BuildGraphic(const char* Type, const char* ToGnuplot, const char* FromGnuplot, char* function1, char* function2, const char* yrange, const char* xrange, const char* title);
 
 
-TreeError PrintfLatex(Tree* tree, Var* names);
-void PrintTangentEquation(Tree* tree, FILE* To, Var* names);
-void PrintSolutionDiff(Node* node, FILE* To);
+// print
+void LatexPrintBeginning(FILE* To);
+void LatexPrintDiff(FILE* To);
+void LatexPrintEnding(FILE* To);
+
+void PrintTangentEquation(Tree* tree, FILE* To, Var* vars, size_t real_var);
+void PrintSolutionDiff(Node* node, FILE* To, Var vars);
 
 
 void       LatexPrintAdd(Node* node, FILE* To);
@@ -74,6 +64,25 @@ void       LatexPrintCos(Node* node, FILE* To);
 void       LatexPrintSin(Node* node, FILE* To);
 void      LatexPrintSqrt(Node* node, FILE* To);
 void        LatexPrintLn(Node* node, FILE* To);
+
+
+
+// simplification
+TreeError Simplification(Tree* tree);
+
+TreeError CollapsingConstants(Tree* tree, Node** node);
+TreeError RemoveDummyElements(Tree* tree, Node** node);
+
+bool isMul1(Node* parent, Node* kid);
+bool isAdd0(Node* parent, Node* kid);
+bool isSub0(Node* parent, Node* kid);
+bool isPow1(Node* parent, Node* kid);
+bool isDiv1(Node* parent, Node* kid);
+bool isMul0(Node* parent, Node* kid);
+bool isDiv0(Node* parent, Node* kid);
+bool isPow0(Node* parent, Node* kid);
+
+bool isEqual(double arg1, double arg2);
 
 
 #endif

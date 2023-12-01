@@ -312,7 +312,7 @@ static void dtError (const char Message [])
     throw Message;    
 
     printf ("==Dotter error!==\n");
-    printf ("Message = %s\n");
+    //printf ("Message = %s\n");
     
     throw "Dotter error!!!"; //Âäðóã êòî-òî ëîâèò. ) 
     

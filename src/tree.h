@@ -137,7 +137,7 @@ struct Tree
 {
     Node* root;
     size_t size;
-    size_t num_names;
+    size_t num_vars;
     size_t changes_num;
 };
 
@@ -179,5 +179,7 @@ TreeError  Swap(Node* addresses[], int left, int right);
 
 void DumpErrors(TreeError error);
 
+///////
+void AddGraphics(FILE* To, Tree* tree1, Tree* tree2);
 
 #endif

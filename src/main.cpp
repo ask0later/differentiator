@@ -10,16 +10,23 @@ int main()
     Tree tree   = {};
     Tree tree_dif = {};
 
+    // Parse parse = {};
+    // parse.str = buffer.position;
+    // parse.position = 0;
+    // int value = GetG(&parse);
+    // printf("%d", value);
+
     ConstructorTree(&tree);
     ConstructorTree(&tree_dif);
 
-    Var names[MAX_NUM_VARS] = {};
+    Var vars[MAX_NUM_VARS] = {};
 
     CreateBuffer(&buffer, "file.txt");
 
     char* position = buffer.position;
+    
 
-    TreeError error = ReadTree(&tree, &tree.root, &position, IN_ORDER, names, buffer);
+    TreeError error = ReadTree(&tree, &tree.root, &position, IN_ORDER, vars, buffer);
     if (error != NO_ERROR)
     {
         DumpErrors(error);
@@ -27,42 +34,64 @@ int main()
         return 1;
     }
     Simplification(&tree);
-    // PrintNode(tree.root, stdout, IN_ORDER);
 
-    PrintfLatex(&tree, names);
+    PrintNameTable(&tree, vars);
 
-    // names[0].var_value = 0;
-    // PrintNameTable(&tree, names);
-    // FILE* FileFunc = fopen("function.txt", "w");
-    // PrintNode(tree.root, FileFunc, IN_ORDER);
-    // fclose(FileFunc);
+    size_t power = 3;
+    size_t real_var = 0;
 
-    // FILE* TaylorFunc = fopen("taylor.txt", "w");
-    // PrintMaclaurinExpansion(&tree, 3, TaylorFunc, names);
-    // fclose(TaylorFunc);
+    if (tree.num_vars)
+        real_var = GetRealVar(vars);
 
-    // char function1[1024] = {};
-    // char function2[1024] = {};
-    // ReadReadyFunctionFrom(function1, "function.txt");
-    // ReadReadyFunctionFrom(function2, "taylor.txt");
-
-    // BuildGraphic("png", "function1.png", "function1.txt", function1, function2, "[-3:3]", "[-10:10]", "Function and Taylor");
-    // system("gnuplot -c function1.txt");
-
-    // char function3[1024] = {};
-    // FILE* TangetFunc = fopen("tanget.txt", "w");
-    // PrintTangentEquation(&tree, TangetFunc, names);
-    // fclose(TangetFunc);
-    // ReadReadyFunctionFrom(function3, "tanget.txt");
     
-    //BuildGraphic("png", "function2.png", "function2.txt", function1, function3, "[-3:3]", "[-10:10]", "Function and Tanget");
-    //system("gnuplot -c function2.txt");
+
+    FILE* To = fopen("latex.txt", "w");
+
+    LatexPrintBeginning(To);
+    fprintf(To, "$f(x) = ");
+    LatexPrintNode(tree.root, To);
+    fprintf(To, "$\\\\\n");
     
-    //GraphicDump(&tree, NULL);
+    fprintf(To, "Производная высчитывается относительно переменной <%s> при помощи элементарых правил арифметики и очевидных преобразований\\\\\n", vars[real_var].name);
+
+    tree_dif.root = Differentiator(tree.root, vars[real_var], To, true);
+    Simplification(&tree_dif);
+
+    fprintf(To, "В итоге мы получаем.\\\\\n");
+    fprintf(To, "$f'(x) = ");
+    LatexPrintNode(tree_dif.root, To);
+    fprintf(To, "$\\\\\n");
+
+
+    Tree tree_tay = {};
+    fprintf(To, "Разложение по Тейлору:\\\\\n");
+    fprintf(To, "$f(x) = ");
+    tree_tay.root = Taylortition(&tree, power, vars, real_var);
+    Simplification(&tree_tay);
+    LatexPrintNode(tree_tay.root, To);
+    
+    fprintf(To, " + o( ( x - %lg ) ^ %lu )$\\\\\n", vars[0].value, power);
+
+    //AddGraphics(To, &tree, &tree_tay);
+    LatexPrintEnding(To);
+
+    fclose(To);
+
+
+
+    system("pdflatex \"latex.txt\"");
+
+    
+    GraphicDump(&tree, NULL);
 
     DestructorTree(&tree);
+    DestructorTree(&tree_dif);
+    DestructorTree(&tree_tay);
+
 
     DeleteBuffer(&buffer);
+
+    
 
 
     return 0;

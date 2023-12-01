@@ -5,7 +5,7 @@ TreeError ConstructorTree(Tree* tree)
     assert(tree);
 
     tree->size = 0;
-    tree->num_names = 0;
+    tree->num_vars = 0;
     tree->changes_num = 0;
 
     return NO_ERROR;
@@ -179,6 +179,8 @@ TreeError LatexPrintNode(Node* node, FILE* To)
     
     return NO_ERROR;
 }
+
+
 
 TreeError PrintNode(Node* node, FILE* To, Order order_value)
 {
@@ -384,11 +386,12 @@ TreeError PasteObject(Tree* tree, char* source, Node** node, Var* names)
                 return NO_ERROR;
             }
         }
+        names[tree->num_vars].name_size = strlen(source);
+        (*node)->data.variable = strndup(source, names[tree->num_vars].name_size);
+        memcpy(names[tree->num_vars].name, (*node)->data.variable, names[tree->num_vars].name_size);
+        names[tree->num_vars].value = (double) INT_MAX;
 
-        (*node)->data.variable = strdup(source);
-        names[tree->num_names].name_size = strlen(source);
-        memcpy(names[tree->num_names].name, (*node)->data.variable, names[tree->num_names].name_size);
-        tree->num_names++;
+        tree->num_vars++;
     }
 
     return NO_ERROR;
@@ -494,8 +497,9 @@ TreeError ReadObject(char* source, char** position)
         (*position)++;
         i++;
     }
-    
-    //source[i - 1] = 0; // убирает последний пробел обЪекта
+    //printf("!%s!\n", source);
+    if (i != 0)
+        source[i - 1] = '\0'; // убирает последний пробел обЪекта
     //printf("%s\n", source);
 
     (*position)--;
