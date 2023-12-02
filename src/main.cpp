@@ -2,29 +2,35 @@
 #include "readFile.h"
 #include "dif.h"
 #include "graphic.h"
+#include "tree.h"
 
 
 int main()
-{
+{   
     Text buffer = {};
-    Tree tree   = {};
-    Tree tree_dif = {};
+    CreateBuffer(&buffer, "file.txt");
 
+    // Tree tree   = {};
+    
     // Parse parse = {};
     // parse.str = buffer.position;
     // parse.position = 0;
-    // int value = GetG(&parse);
-    // printf("%d", value);
+    // Node* root = GetG(&parse);
+    // PrintNode(root, stdout, IN_ORDER);
+
+    // DeleteNode(root);
+
+    Tree tree   = {};
+    Tree tree_dif = {};
 
     ConstructorTree(&tree);
     ConstructorTree(&tree_dif);
 
     Var vars[MAX_NUM_VARS] = {};
 
-    CreateBuffer(&buffer, "file.txt");
+    //printf("%s\n", buffer);
 
     char* position = buffer.position;
-    
 
     TreeError error = ReadTree(&tree, &tree.root, &position, IN_ORDER, vars, buffer);
     if (error != NO_ERROR)
@@ -33,6 +39,7 @@ int main()
         DestructorTree(&tree);
         return 1;
     }
+    
     Simplification(&tree);
 
     PrintNameTable(&tree, vars);
@@ -40,10 +47,8 @@ int main()
     size_t power = 3;
     size_t real_var = 0;
 
-    if (tree.num_vars)
-        real_var = GetRealVar(vars);
-
-    
+    if (tree.num_vars != 1)
+        real_var = GetRealVar(vars);    
 
     FILE* To = fopen("latex.txt", "w");
 
@@ -72,17 +77,13 @@ int main()
     
     fprintf(To, " + o( ( x - %lg ) ^ %lu )$\\\\\n", vars[0].value, power);
 
-    //AddGraphics(To, &tree, &tree_tay);
+    AddGraphics(To, &tree, &tree_tay);
     LatexPrintEnding(To);
 
     fclose(To);
 
-
-
     system("pdflatex \"latex.txt\"");
 
-    
-    GraphicDump(&tree, NULL);
 
     DestructorTree(&tree);
     DestructorTree(&tree_dif);
@@ -90,9 +91,6 @@ int main()
 
 
     DeleteBuffer(&buffer);
-
-    
-
 
     return 0;
 }

@@ -107,6 +107,108 @@ Node* CreateNode(Type type, void* value, Node* left, Node* right)
     return node;
 }
 
+
+
+Node* GetG(Parse* parse)
+{
+    Node* current = GetE(parse);
+    //syntax_assert(parse->str[parse->position] == '\0', parse);
+    return current;
+}
+
+Node* GetE(Parse* parse)
+{
+    Node* val = GetT(parse);
+
+    while((parse->str[parse->position] == '+') || (parse->str[parse->position] == '-'))
+    {
+        char op = parse->str[parse->position];
+        parse->position++;
+        Node* val2 = GetT(parse);
+        switch (op)
+        {
+            case '+': val = CreateOperator(OP_ADD, val, val2); break;
+            case '-': val = CreateOperator(OP_SUB, val, val2); break;
+            default: printf("extra"); syntax_assert(false, parse);
+                break;
+        }
+    }
+    //syntax_assert(parse->str[parse->position] != '\0', parse);
+    return val;
+}
+
+
+Node* GetT(Parse* parse)
+{
+    Node* val = GetP(parse);
+
+    while((parse->str[parse->position] == '*') || (parse->str[parse->position] == '/'))
+    {
+        char op = parse->str[parse->position];
+        parse->position++;
+        Node* val2 = GetP(parse);
+        switch (op)
+        {
+            case '*': val = CreateOperator(OP_MUL, val, val2); break;
+            case '/': val = CreateOperator(OP_DIV, val, val2); break;
+            default: printf("extra"); syntax_assert(false, parse);
+                break;
+        }
+    }
+    
+    //syntax_assert(parse->str[parse->position] != '\0', parse);
+    return val;
+}
+
+Node* GetP(Parse* parse)
+{
+    if (parse->str[parse->position] == '(')
+    {
+        Node* val = 0;
+        parse->position++;
+        val = GetE(parse);
+        syntax_assert(parse->str[parse->position] == ')', parse);
+        parse->position++;
+
+        return val;
+    }
+
+    return GetN(parse);
+}
+
+Node* GetN(Parse* parse)
+{
+    int val = 0;
+    size_t old_position = parse->position;
+    while(isalnum(parse->str[parse->position]))//('0' <= parse->str[parse->position]) && (parse->str[parse->position] <= '9'))
+    {
+        val = val * 10 + parse->str[parse->position] - '0';
+        parse->position++;
+    }
+
+    syntax_assert(parse->position > old_position, parse);
+
+    return CreateNumber(val, NULL, NULL);
+}
+
+void syntax_assert(bool x, Parse* parse)
+{
+    if (x == false)
+    {
+        printf("syntax error: %s\n", parse->str);
+        printf("              ");
+        for (size_t i = 0; i < parse->position; i++)
+        {
+            printf(" ");
+        }
+        printf("^\n");
+
+
+        exit(1);
+    }
+}
+
+
 TreeError LatexPrintNode(Node* node, FILE* To)
 {
     if (!node) {return NO_ERROR;}

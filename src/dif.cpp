@@ -1,5 +1,5 @@
 #include "dif.h"
-
+#include "readFile.h"
 
 Node* Differentiator(Node* node, Var vars, FILE* To, bool need_print)
 {
@@ -292,15 +292,13 @@ void AddGraphics(FILE* To, Tree* tree1, Tree* tree2)
     printf("%s\n", function1);
     printf("%s\n", function2);
 
-    BuildGraphic("pdf", "function1.pdf", "function1.txt", function1, function2, "[-3:3]", "[-10:10]", "Function and Taylor");
+    BuildGraphic("png", "function1.png", "function1.txt", function1, function2, "[-3:3]", "[-10:10]", "Function and Taylor");
     system("gnuplot -c function1.txt");
 
 
-    fprintf(To, "\\includepdf{function1.pdf}\n");
+    //fprintf(To, "\\includepdf{function1.pdf}\n");
     return;
 }
-
-
 
 void PrintTangentEquation(Tree* tree, FILE* To, Var* vars, size_t real_var)
 {
@@ -315,7 +313,6 @@ void PrintTangentEquation(Tree* tree, FILE* To, Var* vars, size_t real_var)
 
     DeleteNode(tree_dif.root);
 }
-
 
 void PrintSolutionDiff(Node* node, FILE* To, Var vars)
 {
@@ -482,19 +479,12 @@ void BuildGraphic(const char* Type, const char* ToGnuplot, const char* FromGnupl
     char func1[256]  = {};
     char betwen[3]   = {};
     char func2[256]  = {};
-    char temp[64]    = {};
+    char temp[256]   = {};
 
-
-    sprintf(str,  "set terminal %s size 800, 600\n", Type);
-
-    sprintf(temp, "set output \"%s\"\n", ToGnuplot);
-
-    strcat(str, temp);
-
-    sprintf(temp, "set xlabel \"X\"\n" "set ylabel \"F(X)\"\n" "set grid\n");
-
-    strcat(str, temp);
-
+    sprintf(str,  "set terminal %s size 800, 600\n"
+                  "set output '%s'\n"
+                  "set xlabel \"X\"\n" "set ylabel \"F(X)\"\n" "set grid\n", Type, ToGnuplot);
+    
     if (yrange)
         sprintf(temp, "set yrange%s\n", yrange);
     else
@@ -509,11 +499,8 @@ void BuildGraphic(const char* Type, const char* ToGnuplot, const char* FromGnupl
 
     strcat(str, temp);
 
-    sprintf(temp, "set title \"%s\" font \"Helvetica Bold, 20\"\n", title);
-
-    strcat(str, temp);
-
-    sprintf(temp, "set terminal %s size 800, 600\nplot", Type);
+    sprintf(temp, "set title '%s' font \"Helvetica Bold, 20\"\n"
+                  "set terminal %s size 800, 600\nplot", title, Type);
 
     strcat(str, temp);
     

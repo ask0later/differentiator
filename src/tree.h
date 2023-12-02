@@ -14,7 +14,6 @@
 #include "color.h"
 #include "readFile.h"
 
-
 const size_t MAX_SIZE_TREE = 64;
 const size_t MAX_SIZE_ARG  = 64;
 const size_t MAX_SIZE_NAME = 10;
@@ -114,6 +113,11 @@ enum TreeError
     READER_ERROR
 };
 
+struct Parse
+{
+    char* str;
+    size_t position;
+};
 
 
 union tag_data
@@ -154,6 +158,18 @@ Node* CreateFunction(Functions value, Node* left, Node* right);
 
 void DeleteNode(Node* node);
 
+Node* GetG(Parse* parse);
+Node* GetE(Parse* parse);
+Node* GetT(Parse* parse);
+Node* GetP(Parse* parse);
+Node* GetN(Parse* parse);
+
+void syntax_assert(bool x, Parse* parse);
+
+
+
+
+TreeError ReadTree(Tree* tree, Node** node, char** position, Order order_value, Var* names, Text buffer);
 TreeError  PrintNode(Node* node, FILE*   To, Order order_value);
 void PrintObject(Node* node, FILE* To);
 void PrintOperator(Operators value_Operators, FILE* TO);
@@ -164,7 +180,6 @@ void LatexPrintObject(Node* node, FILE* To);
 void LatexPrintOperator(Operators value_Operators, FILE* To);
 
 
-TreeError ReadTree(Tree* tree, Node** node, char** position, Order order_value, Var* names, Text buffer);
 TreeError SkipSpaces(char** position);
 TreeError ReadObject(char* source, char** position);
 TreeError PasteObject(Tree* tree, char* source, Node** node, Var* names);
