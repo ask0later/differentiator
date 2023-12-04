@@ -7,5 +7,5 @@ set title 'Function and Tanget' font 'Sans,25'
 set yrange[-3:3]
 set xrange[-10:10]
 set title 'Function and Tanget' font "Helvetica Bold, 20"
-plot (  sin ( x )  )  lc rgb "red" , ( x )  lc rgb "green"
+plot ( (  sin ( x )  )  * ( 2 )  )  lc rgb "red" , ( ( 2 )  * ( x )  )  lc rgb "green"
 set term pop

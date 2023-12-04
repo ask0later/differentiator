@@ -36,8 +36,8 @@ Node* GetTangetTree(Tree* tree, Var* vars, size_t real_var);
 
 size_t Factorial(size_t n);
 
-size_t GetRealVar(Var* vars);
-void PrintNameTable(Tree* tree, Var* vars);
+size_t GetDifferentiationVar(Var* vars);
+void AssignVariables(Tree* tree, Var* vars);
 
 
 // gnuplot
@@ -84,6 +84,6 @@ bool isDiv0(Node* parent, Node* kid);
 bool isPow0(Node* parent, Node* kid);
 
 bool isEqual(double arg1, double arg2);
-
+void CleanBuffer();
 
 #endif

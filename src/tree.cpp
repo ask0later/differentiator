@@ -96,106 +96,165 @@ Node* CreateNode(Type type, void* value, Node* left, Node* right)
     return node;
 }
 
+// void Tokenization(Token** tokens, size_t token_i, Text* buf)
+// {   
+//     while (isspace(buf->str[buf->position]))
+//         buf->position++;
 
-
-Node* GetG(Parse* parse)
-{
-    Node* current = GetE(parse);
-    //syntax_assert(parse->str[parse->position] == '\0', parse);
-    return current;
-}
-
-Node* GetE(Parse* parse)
-{
-    Node* val = GetT(parse);
-
-    while((parse->str[parse->position] == '+') || (parse->str[parse->position] == '-'))
-    {
-        char op = parse->str[parse->position];
-        parse->position++;
-        Node* val2 = GetT(parse);
-        switch (op)
-        {
-            case '+': val = CreateOperator(OP_ADD, val, val2); break;
-            case '-': val = CreateOperator(OP_SUB, val, val2); break;
-            default: printf("extra"); syntax_assert(false, parse);
-                break;
-        }
-    }
-    //syntax_assert(parse->str[parse->position] != '\0', parse);
-    return val;
-}
-
-
-Node* GetT(Parse* parse)
-{
-    Node* val = GetP(parse);
-
-    while((parse->str[parse->position] == '*') || (parse->str[parse->position] == '/'))
-    {
-        char op = parse->str[parse->position];
-        parse->position++;
-        Node* val2 = GetP(parse);
-        switch (op)
-        {
-            case '*': val = CreateOperator(OP_MUL, val, val2); break;
-            case '/': val = CreateOperator(OP_DIV, val, val2); break;
-            default: printf("extra"); syntax_assert(false, parse);
-                break;
-        }
-    }
+//     //printf("%lu and %lu\n", buf->position, buf->size_buffer);
+//     while (buf->str[buf->position] == '\0')
     
-    //syntax_assert(parse->str[parse->position] != '\0', parse);
-    return val;
-}
+//     //printf("<<%c>>\n", buf->str[11]);
 
-Node* GetP(Parse* parse)
-{
-    if (parse->str[parse->position] == '(')
-    {
-        Node* val = 0;
-        parse->position++;
-        val = GetE(parse);
-        syntax_assert(parse->str[parse->position] == ')', parse);
-        parse->position++;
+//     if (buf->position == buf->size_buffer)
+//         return;
 
-        return val;
-    }
+//     int val = 0;
 
-    return GetN(parse);
-}
+//     while (isdigit(buf->str[buf->position]))
+//     {
+//         val = 10 * val + buf->str[buf->position] - '0';
+//         buf->position++;
+//     }
+//     if (val != 0)
+//     {
+//         (*tokens)[token_i].type = NUM;
+//         (*tokens)[token_i].data.value = val;
+//         token_i++;
+//         return Tokenization(tokens, token_i, buf);
+//     }
 
-Node* GetN(Parse* parse)
-{
-    int val = 0;
-    size_t old_position = parse->position;
-    while(isalnum(parse->str[parse->position]))//('0' <= parse->str[parse->position]) && (parse->str[parse->position] <= '9'))
-    {
-        val = val * 10 + parse->str[parse->position] - '0';
-        parse->position++;
-    }
+//     for (size_t i = 0; i < NUM_COMMANDS; i++)
+//     {
+//         //printf("<%s> and <%s> \n", op, cmds[i].name);
+//         if (strncmp(&(buf->str[buf->position]), cmds[i].name, cmds[i].size_name) == 0)
+//         {
+//             //printf("<%s> and <%s> \n", &(buf->str[buf->position]), cmds[i].name);
+//             //printf("");
+//             //printf("!%lu %lu!\n", buf->position, buf->size_buffer);
+//             buf->position += cmds[i].size_name;
+//             //printf("!%lu %lu!\n", buf->position, buf->size_buffer);
+            
+//             //printf("fuck ~%d~", token_i);
+//             (*tokens)[token_i].type = OPERATOR;
+//             //printf("~%d~", (*tokens)[token_i].type);
+//             (*tokens)[token_i].data.value_op = (Operators) cmds[i].value;
+//             token_i++;
+            
+//             return Tokenization(tokens, token_i, buf);
+//         }
+//     }
+// }   
 
-    syntax_assert(parse->position > old_position, parse);
+// Node* GetG(Text* buf, Token* tokens, size_t* token_i)
+// {
+//     //printf("<%d>", tokens[*token_i].type);
+//     Node* current = GetE(buf, tokens, token_i);
+//     syntax_assert(buf->str[buf->position] == '\0', buf);
+//     return current;
+// }
 
-    return CreateNumber(val, NULL, NULL);
-}
+// Node* GetE(Text* buf, Token* tokens, size_t* token_i)
+// {
+//     //printf("<%d>", tokens[*token_i].type);
+//     // return NULL;
+//     Node* val = GetT(buf, tokens, token_i);
 
-void syntax_assert(bool x, Parse* parse)
-{
-    if (x == false)
-    {
-        printf("syntax error: %s\n", parse->str);
-        printf("              ");
-        for (size_t i = 0; i < parse->position; i++)
-        {
-            printf(" ");
-        }
-        printf("^\n");
+//     if (tokens[*token_i].type == OPERATOR)
+//         while ((tokens[*token_i].data.value_op == OP_ADD) || (tokens[*token_i].data.value_op == OP_SUB))
+//         {
+//             Operators op = tokens[*token_i].data.value_op;
+//             (*token_i)++;
+//             Node* val2 = GetT(buf, tokens, token_i);
+//             val = CreateOperator(op, val, val2);
+//         }
+//     //syntax_assert(buf->str[buf->position] != '\0', buf);
+//     return val;
+// }
 
 
-        exit(1);
-    }
-}
+// Node* GetT(Text* buf, Token* tokens, size_t* token_i)
+// {
+//     //printf("<%d>", tokens[*token_i].type);
+//     Node* val = GetP(buf, tokens, token_i);
+    
+//     if (tokens[*token_i].type == OPERATOR)
+//     {
+//         for (size_t i = 0; i < NUM_COMMANDS_T; i++)
+//         {
+//             if (cmdsT[i].value == tokens[*token_i].data.value_op)
+//             {
+//                 Operators op = tokens[*token_i].data.value_op;
+//                 (*token_i)++;
+//                 Node* val2 = GetP(buf, tokens, token_i);
+//                 val = CreateOperator(op , val, val2);
+//             }
+//         }
+//     }
+    
+//     return val;
+// }
+
+// Node* GetP(Text* buf, Token* tokens, size_t* token_i)
+// {
+//     //printf("<%d>", tokens[*token_i].type);
+//     if (tokens[*token_i].type == OPERATOR)
+//     {
+//         if (tokens[*token_i].data.value_op == OP_LEFT_P)
+//         {
+//             (*token_i)++;
+//             Node* val = GetE(buf, tokens, token_i);
+//             if (tokens[*token_i].data.value_op == OP_RIGHT_P)
+//                 (*token_i)++;
+//             else 
+//                 syntax_assert(false, buf);
+//             return val;
+//         }
+//     }
+
+//     return GetC(buf, tokens, token_i);
+// }
+
+// Node* GetC(Text* buf, Token* tokens, size_t* token_i)
+// {
+
+//     return GetN(buf, tokens, token_i);
+// }
+
+// Node* GetN(Text* buf, Token* tokens, size_t* token_i)
+// {
+//     printf("<%d>", tokens[*token_i].type);
+//     //size_t old_position = buf->position;
+//     double val = 0;
+//     if (tokens[*token_i].type == NUM)
+//     {
+//         val = tokens[*token_i].data.value;
+//         (*token_i)++;
+//     }
+
+//     //syntax_assert(buf->position > old_position, buf);
+
+//     return CreateNumber(val, NULL, NULL);
+// }
+
+// void syntax_assert(bool x, Text* buf)
+// {
+//     if (x == false)
+//     {
+//         printf("syntax error: %s\n", buf->str);
+//         printf("              ");
+//         for (size_t i = 0; i < buf->position; i++)
+//         {
+//             printf(" ");
+//         }
+//         printf("^\n");
+
+
+//         exit(1);
+//     }
+// }
+
+
 TreeError LatexPrintNode(Node* node, FILE* To)
 {
     if (!node) {return NO_ERROR;}
@@ -443,7 +502,7 @@ TreeError PasteObject(Tree* tree, char* source, Node** node, Var* names)
 
 TreeError ReadTree(Tree* tree, Node** node, char** position, Order order_value, Var* names, Text buffer)
 {
-    if (*position - buffer.position >= (long int) buffer.size_buffer) {return READER_ERROR;}
+    if (*position - buffer.str >= (long int) buffer.size_buffer) {return READER_ERROR;}
 
     char source[MAX_SIZE_ARG] = {};
     TreeError error = NO_ERROR;

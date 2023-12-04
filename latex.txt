@@ -27,10 +27,4 @@ $(x)' =  1$\\
 В итоге мы получаем.\\
 $f'(x) = (  cos x ) $\\
 Разложение по Тейлору:\\
-$f(x) = ( x + ( (  \dfrac { -1 } { 6 }  )  \cdot ( x ^ {3} )  )  )  + o( ( x - 0 ) ^ 3 )$\\
-Касательная в точке x = 0:\\
-$f(x) = x$\\
-\includepdf{function1.pdf}
-\includepdf{function2.pdf}
-\end{flushleft}
-\end{document}
+$f(x) = 

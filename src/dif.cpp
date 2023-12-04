@@ -1,12 +1,29 @@
 #include "dif.h"
 #include "readFile.h"
 
+#define _ADD(L, R) CreateOperator(OP_ADD,  L, R)
+#define _SUB(L, R) CreateOperator(OP_SUB,  L, R)
+#define _MUL(L, R) CreateOperator(OP_MUL,  L, R)
+#define _DIV(L, R) CreateOperator(OP_DIV,  L, R)
+
+#define _SIN(L, R) CreateOperator(FUN_SIN, L, R)
+#define _COS(L, R) CreateOperator(FUN_COS, L, R)
+#define _POW(L, R) CreateOperator(FUN_POW, L, R)
+#define  _LN(L, R) CreateOperator(FUN_LN,  L, R) 
+
+#define _d(node) Differentiate(node, vars, To, need_print)
+#define _c(node) Copynator(node)
+
+#define _VAR(x) CreateVariable(x, NULL, NULL)
+
+#define _NUM(value) CreateNumber(value, NULL, NULL)
+
 Node* Differentiate(Node* node, Var vars, FILE* To, bool need_print)
 {
     if (need_print == true)
         PrintSolutionDiff(node, To, vars);
 
-    #define _NUM(value) CreateNumber(value, NULL, NULL)
+    
 
     if (node->type == NUM) return _NUM(0);
 
@@ -19,21 +36,6 @@ Node* Differentiate(Node* node, Var vars, FILE* To, bool need_print)
             return _NUM(0);
         }
     }
-
-    #define _ADD(L, R) CreateOperator(OP_ADD,  L, R)
-    #define _SUB(L, R) CreateOperator(OP_SUB,  L, R)
-    #define _MUL(L, R) CreateOperator(OP_MUL,  L, R)
-    #define _DIV(L, R) CreateOperator(OP_DIV,  L, R)
-
-    #define _SIN(L, R) CreateOperator(FUN_SIN, L, R)
-    #define _COS(L, R) CreateOperator(FUN_COS, L, R)
-    #define _POW(L, R) CreateOperator(FUN_POW, L, R)
-    #define  _LN(L, R) CreateOperator(FUN_LN,  L, R) 
-
-    #define _d(node) Differentiate(node, vars, To, need_print)
-    #define _c(node) Copynator(node)
-    
-    #define _VAR(x) CreateVariable(x, NULL, NULL)
 
     if (node->type == OPERATOR)
     {
@@ -76,21 +78,6 @@ Node* Differentiate(Node* node, Var vars, FILE* To, bool need_print)
     }
     
     return NULL;
-
-    #undef _ADD
-    #undef _SUB
-    #undef _MUL
-    #undef _DIV
-
-    #undef _SIN
-    #undef _COS
-    #undef _POW
-    #undef  _LN 
-
-    #undef _d
-    #undef _c
-    
-    #undef _VAR
 }
 
 Node* Copynator(Node* node)
@@ -201,7 +188,7 @@ void LatexPrintEnding(FILE* To)
                 "\\end{document}\n");
 }
 
-void PrintNameTable(Tree* tree, Var* vars)
+void AssignVariables(Tree* tree, Var* vars)
 {
     double x = 0;
     for (size_t i = 0; i < tree->num_vars; i++)
@@ -211,14 +198,18 @@ void PrintNameTable(Tree* tree, Var* vars)
             printf("Введите чему равна переменная \"%s\" = ", vars[i].name);
             scanf("%lg", &x);
             vars[i].value = x;
-            while (getchar() != '\n')
-                ;
+            CleanBuffer();
         }
         printf("vars[%lu] = \"%s\" = %3lg (длина имени переменной = %2lu)\n", i, vars[i].name, vars[i].value, vars[i].name_size);
     }
 }
+void CleanBuffer()
+{
+    while (getchar() != '\n')
+        ;
+}
 
-size_t GetRealVar(Var* vars)
+size_t GetDifferentiationVar(Var* vars)
 {
     char str[MAX_SIZE_ARG] = {};
     printf("Введите относительно какой переменной посчитать производнуюю ");
@@ -234,7 +225,7 @@ size_t GetRealVar(Var* vars)
         }
     }
 
-    return GetRealVar(vars);
+    return GetDifferentiationVar(vars);
 }
 
 void AddGraphics(Tree* tree1, Tree* tree2, Tree* tree3)
@@ -258,8 +249,10 @@ void AddGraphics(Tree* tree1, Tree* tree2, Tree* tree3)
     ReadFromTextToBuffer(function1, "function.txt");
     ReadFromTextToBuffer(function2, "taylor.txt");
     ReadFromTextToBuffer(function3, "tanget.txt");
-    // printf("%s\n", function1);
-    // printf("%s\n", function2);
+    printf("%s\n", function1);
+    printf("%s\n", function2);
+    printf("%s\n", function3);
+
 
     BuildGraphic("pdf", "function1.pdf", "function1.txt", function1, function2, "[-3:3]", "[-10:10]", "Function and Taylor");
     system("gnuplot -c function1.txt");
@@ -279,18 +272,6 @@ Node* GetTangetTree(Tree* tree, Var* vars, size_t real_var)
     Tree tree_dif = {};
     tree_dif.root = Differentiate(tree->root, vars[real_var], NULL, false);
     tree_dif.num_vars = 1;
-    printf("%lg and %lg\n", Evaluate(tree, tree->root, vars), Evaluate(&tree_dif, tree_dif.root, vars));
-
-    #define _NUM(value) CreateNumber(value, NULL, NULL)
-
-    #define _ADD(L, R) CreateOperator(OP_ADD,  L, R)
-    #define _SUB(L, R) CreateOperator(OP_SUB,  L, R)
-    #define _MUL(L, R) CreateOperator(OP_MUL,  L, R)
-    
-    #define _d(node) Differentiator(node, vars, To, need_print)
-    #define _c(node) Copynator(node)
-    
-    #define _VAR(x) CreateVariable(x, NULL, NULL)
 
     tree_tanget.root = _ADD(
                     _NUM(Evaluate(tree, tree->root, vars)),
@@ -300,12 +281,6 @@ Node* GetTangetTree(Tree* tree, Var* vars, size_t real_var)
                     ));
 
     DeleteNode(tree_dif.root);
-
-    #undef _ADD 
-    #undef _SUB 
-    #undef _MUL 
-    #undef _NUM
-    #undef _VAR
 
     return tree_tanget.root;
 }
@@ -333,7 +308,6 @@ void PrintSolutionDiff(Node* node, FILE* To, Var vars)
             fprintf(To, " 1");
         else 
             fprintf(To, " 0");
-            //fprintf(To, " %s", node->data.variable);
     }
 
     
@@ -401,15 +375,7 @@ Node* Taylortition(Tree* tree, size_t power, Var* vars, size_t real_var)
     
     Tree tree_tay = {};
     Node** current = &(tree_tay.root);
-
-    #define _ADD(L, R) CreateOperator(OP_ADD, L, R)
-    #define _SUB(L, R) CreateOperator(OP_SUB, L, R)
-    #define _MUL(L, R) CreateOperator(OP_MUL, L, R)
-    #define _DIV(L, R) CreateOperator(OP_DIV, L, R)
-    #define _POW(L, R) CreateOperator(FUN_POW, L, R)
-    #define _NUM(value) CreateNumber(value, NULL, NULL)
-    #define _VAR(x) CreateVariable(x, NULL, NULL) 
-
+    Node** parent = current;
 
     dif_prev.root = Copynator(tree->root);
     dif_prev.num_vars = tree->num_vars;
@@ -421,9 +387,19 @@ Node* Taylortition(Tree* tree, size_t power, Var* vars, size_t real_var)
     {
         value = Evaluate(&dif_prev, dif_prev.root, vars);
 
-        *current = _ADD(_MUL(_DIV(_NUM(value), _NUM((double) Factorial(i))), _POW(_SUB(_VAR(vars[real_var].name), _NUM(vars[real_var].value)), _NUM((double) i))), NULL);
-    
+        *current = _ADD(
+                        _MUL(
+                            _DIV(
+                                _NUM(value), 
+                                _NUM((double) Factorial(i))), 
+                            _POW(
+                                _SUB(_VAR(vars[real_var].name), _NUM(vars[real_var].value)), 
+                                _NUM((double) i))),
+                            NULL);
+
+        parent = current;
         current = &((*current)->right);
+
 
         dif_next.root = Differentiate(dif_prev.root, vars[0], NULL, false);
         dif_next.num_vars = 1;
@@ -433,15 +409,14 @@ Node* Taylortition(Tree* tree, size_t power, Var* vars, size_t real_var)
         dif_next.root = NULL;
     }
 
-    DeleteNode(dif_prev.root);
+    
+    Node* copy = _c((*parent)->left);
+    DeleteNode(*parent);
+    *parent = copy;
 
-    #undef _ADD 
-    #undef _SUB 
-    #undef _MUL 
-    #undef _DIV 
-    #undef _POW 
-    #undef _NUM
-    #undef _VAR
+    //PrintNode(dif_prev.root, stdout, IN_ORDER, NOTHING);
+    
+    DeleteNode(dif_prev.root);
 
     return tree_tay.root;
 }
@@ -531,48 +506,72 @@ size_t Factorial(size_t n)
 
 bool isMul1(Node* parent, Node* kid)
 {
+    if (!kid) return false;
+    if (kid->type != NUM) return false;
+    
     if ((parent->data.value_op == OP_MUL) && (isEqual(kid->data.value, 1)))
         return true;
     return false;
 }
 bool isAdd0(Node* parent, Node* kid)
 {
+    if (!kid) return false;
+    if (kid->type != NUM) return false;
+
     if ((parent->data.value_op == OP_ADD) && (isEqual(kid->data.value, 0)))
         return true;
     return false;
 }
 bool isSub0(Node* parent, Node* kid)
 {
+    if (!kid) return false;
+    if (kid->type != NUM) return false;
+
     if ((parent->data.value_op == OP_SUB) && (isEqual(kid->data.value, 0)))
         return true;
     return false;
 }
 bool isPow1(Node* parent, Node* kid)
 {
+    if (!kid) return false;
+    if (kid->type != NUM) return false;
+
     if ((parent->data.value_op == FUN_POW) && (isEqual(kid->data.value, 1)))
         return true;
     return false;
 }
 bool isDiv1(Node* parent, Node* kid)
 {
+    if (!kid) return false;
+    if (kid->type != NUM) return false;
+
     if ((parent->data.value_op == OP_DIV) && (isEqual(kid->data.value, 1)))
         return true;
     return false;
 }
 bool isMul0(Node* parent, Node* kid)
 {
+    if (!kid) return false;
+    if (kid->type != NUM) return false;
+
     if ((parent->data.value_op == OP_MUL) && (isEqual(kid->data.value, 0)))
         return true;
     return false;
 }
 bool isDiv0(Node* parent, Node* kid)
 {
+    if (!kid) return false;
+    if (kid->type != NUM) return false;
+
     if ((parent->data.value_op == OP_DIV) && (isEqual(kid->data.value, 0))) // only for node->left
         return true;
     return false;
 }
 bool isPow0(Node* parent, Node* kid)
 {
+    if (!kid) return false;
+    if (kid->type != NUM) return false;
+
     if ((parent->data.value_op == FUN_POW) && (isEqual(kid->data.value, 0)))
         return true;
     return false;
@@ -590,110 +589,68 @@ TreeError RemoveDummyElements(Tree* tree, Node** node)
     Node* copy = {};
     bool check = false;
 
-    if (((*node)->type == OPERATOR) && (((*node)->left == NULL) || ((*node)->right == NULL)))
+    
+
+    if ((*node)->type == OPERATOR)
     {
-        if (((*node)->data.value_op == OP_ADD) || ((*node)->data.value_op == OP_SUB))
+        check |= isMul1(*node, *right);
+        check |= isAdd0(*node, *right);
+        check |= isSub0(*node, *right);
+
+        check |= isDiv1(*node, *right);
+
+        check |= isPow1(*node, *right);
+
+        if (check == true)
         {
-            if ((*node)->left)
-                copy = Copynator((*node)->left);
-            if ((*node)->right)
-                copy = Copynator((*node)->right);
-            
+            copy_node = Copynator((*node)->left);
+            tree->changes_num++;
             DeleteNode(*node);
-            (*node) = copy;
+            *node = copy_node;
+            
+            return NO_ERROR;
+        }
+
+        check |= isMul0(*node, *right);
+
+        if (check == true)
+        {
+            tree->changes_num++;
+            DeleteNode(*node);
+            *node = CreateNumber(0, NULL, NULL);
+            
+            return NO_ERROR;
+        }
+
+        check |= isMul1(*node, *left);
+        check |= isAdd0(*node, *left);
+
+        if (check == true)
+        {
+            copy_node = Copynator((*node)->right);
+            tree->changes_num++;
+            DeleteNode(*node);
+            *node = copy_node;
+            
+            return NO_ERROR;
+        }
+
+        check |= isMul0(*node, *left);
+        check |= isDiv0(*node, *left);
+
+        if (check == true)
+        {
+            tree->changes_num++;
+            DeleteNode(*node);
+            *node = CreateNumber(0, NULL, NULL);
+
             return NO_ERROR;
         }
     }
-
-    if (((*node)->right))
-    {
-        if (((*node)->type == OPERATOR) && ((*right)->type == NUM))
-        {
-            check |= isMul1(*node, *right);
-            check |= isAdd0(*node, *right);
-            check |= isSub0(*node, *right);
-            //check |= isPow1(*node, *right);
-            check |= isDiv1(*node, *right);
-
-            check |= isPow1(*node, *right);
-
-            if (check == true)
-            {
-                copy_node = Copynator((*node)->left);
-                tree->changes_num++;
-                DeleteNode(*node);
-                *node = copy_node;
-                
-                return NO_ERROR;
-            }
-
-            check |= isMul0(*node, *right);
-
-            if (check == true)
-            {
-                tree->changes_num++;
-                DeleteNode(*node);
-                *node = CreateNumber(0, NULL, NULL);
-                
-                return NO_ERROR;
-            }
-
-            if (check == false) 
-            {
-                RemoveDummyElements(tree, left);
-                RemoveDummyElements(tree, right);
-            }
-        }
-        else
-        {
-            RemoveDummyElements(tree, left);
-            RemoveDummyElements(tree, right);
-        }
-    }
-    if (((*node)->left))
-    {   
-        if (((*node)->type == OPERATOR) && ((*left)->type == NUM))
-        {
-            check |= isMul1(*node, *left);
-            check |= isAdd0(*node, *left);
-            //check |= isSub0(*node, *left);
-            //check |= isPow1(**node, **right);
-            //check |= isDiv1(*node, *left);
-
-            if (check == true)
-            {
-                copy_node = Copynator((*node)->right);
-                tree->changes_num++;
-                DeleteNode(*node);
-                *node = copy_node;
-                
-                return NO_ERROR;
-            }
-
-            check |= isMul0(*node, *left);
-            check |= isDiv0(*node, *left);
-
-            if (check == true)
-            {
-                tree->changes_num++;
-                DeleteNode(*node);
-                *node = CreateNumber(0, NULL, NULL);
-
-                return NO_ERROR;
-            }
-
-            if (check == false) 
-            {
-                RemoveDummyElements(tree, left);
-                RemoveDummyElements(tree, right);
-            }
-        }
-        else
-        {
-            RemoveDummyElements(tree, left);
-            RemoveDummyElements(tree, right);
-        }
-    }
+    
+    RemoveDummyElements(tree, left);
+    RemoveDummyElements(tree, right);
+    
     return NO_ERROR;
 }
 
@@ -709,27 +666,30 @@ TreeError CollapsingConstants(Tree* tree, Node** node)
 
     if ((*node)->type == OPERATOR)
     {
-        if (((*node)->right) && ((*node)->left))
+        if (((*left)->type == NUM) && ((*right)->type == NUM))
         {
-            if (((*left)->type == NUM) && ((*right)->type == NUM))
-            {
-                tree->changes_num++;
-                double value = 0, value_left  = (*left)->data.value,\
-                                value_right = (*right)->data.value;
+            tree->changes_num++;
+            double value = 0, value_left  = (*left)->data.value,\
+                            value_right = (*right)->data.value;
 
-                if ((*node)->data.value_op == OP_ADD)
-                    value = value_left + value_right;
-                else if ((*node)->data.value_op == OP_SUB)
-                    value = value_left - value_right;
-                else if ((*node)->data.value_op == OP_MUL)
-                    value = value_left * value_right;
-                else if ((*node)->data.value_op == OP_DIV)
-                    value = value_left / value_right;
-        
-                DeleteNode(*node);
-                *node = CreateNumber(value, NULL, NULL);
-                return NO_ERROR;
+            if ((*node)->data.value_op == OP_ADD)
+                value = value_left + value_right;
+
+            if ((*node)->data.value_op == OP_SUB)
+                value = value_left - value_right;
+            
+            if ((*node)->data.value_op == OP_MUL)
+                value = value_left * value_right;
+            
+            if ((*node)->data.value_op == OP_DIV)
+            {
+
+                value = value_left / value_right;
             }
+    
+            DeleteNode(*node);
+            *node = CreateNumber(value, NULL, NULL);
+            return NO_ERROR;
         }
         else
         {
@@ -915,3 +875,19 @@ void LatexPrintLn(Node* node, FILE* To)
     LatexPrintNode(node->right, To);
     fprintf(To, "})");
 }
+
+
+#undef _ADD
+#undef _SUB
+#undef _MUL
+#undef _DIV
+
+#undef _SIN
+#undef _COS
+#undef _POW
+#undef  _LN 
+
+#undef _d
+#undef _c
+
+#undef _VAR

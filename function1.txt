@@ -7,5 +7,5 @@ set title 'Function and Taylor' font 'Sans,25'
 set yrange[-3:3]
 set xrange[-10:10]
 set title 'Function and Taylor' font "Helvetica Bold, 20"
-plot (  sin ( x )  )  lc rgb "red" , ( ( x )  + ( ( ( -1 )  / ( 6 )  )  * ( ( x ) **( 3 )  )  )  )  lc rgb "green"
+plot ( (  sin ( x )  )  * ( 2 )  )  lc rgb "red" , ( ( ( 2 )  * ( x )  )  + ( ( -0.333333 )  * ( ( x ) **( 3 )  )  )  )  lc rgb "green"
 set term pop

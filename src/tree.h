@@ -17,7 +17,8 @@
 const size_t MAX_SIZE_TREE = 64;
 const size_t MAX_SIZE_ARG  = 64;
 const size_t MAX_SIZE_NAME = 10;
-const size_t NUM_COMMANDS  =  9;
+const size_t NUM_COMMANDS  = 11;
+const size_t NUM_COMMANDS_T = 2;
 const size_t MAX_NUM_VARS  = 10;
 
 typedef char* Elem_t;
@@ -53,7 +54,9 @@ enum Operators
     FUN_COS,
     FUN_POW,
     FUN_SQRT,
-    FUN_LN
+    FUN_LN,
+    OP_LEFT_P,
+    OP_RIGHT_P
 };
 
 struct Command
@@ -72,7 +75,8 @@ struct Var
     size_t         name_size;
 };
 
-
+const size_t SIZE_LEFT_P  = 1;
+const size_t SIZE_RIGHT_P  = 1;
 const size_t SIZE_ADD  = 1;
 const size_t SIZE_SUB  = 1;
 const size_t SIZE_MUL  = 1;
@@ -83,7 +87,9 @@ const size_t SIZE_POW  = 1;
 const size_t SIZE_SQRT = 4;
 const size_t SIZE_LN   = 2;
 
-const Command cmds[NUM_COMMANDS] = {{"+",    SIZE_ADD,  OPERATOR, OP_ADD  , BINARY},\
+const Command cmds[NUM_COMMANDS] = {{"(",    SIZE_LEFT_P,  OPERATOR, OP_LEFT_P,   UNARY},\
+                                    {")",    SIZE_RIGHT_P,  OPERATOR, OP_RIGHT_P, UNARY},
+                                    {"+",    SIZE_ADD,  OPERATOR, OP_ADD  , BINARY},\
                                     {"-",    SIZE_SUB,  OPERATOR, OP_SUB  , BINARY},\
                                     {"*",    SIZE_MUL,  OPERATOR, OP_MUL  , BINARY},\
                                     {"/",    SIZE_DIV,  OPERATOR, OP_DIV  , BINARY},\
@@ -92,6 +98,16 @@ const Command cmds[NUM_COMMANDS] = {{"+",    SIZE_ADD,  OPERATOR, OP_ADD  , BINA
                                     {"^",    SIZE_POW,  OPERATOR, FUN_POW , BINARY},\
                                     {"sqrt", SIZE_SQRT, OPERATOR, FUN_SQRT, UNARY },\
                                     {"ln",   SIZE_LN,   OPERATOR, FUN_LN  , UNARY } };
+
+const Command cmdsT[NUM_COMMANDS] = {{"*",    SIZE_MUL,  OPERATOR, OP_MUL  , BINARY},\
+                                     {"/",    SIZE_DIV,  OPERATOR, OP_DIV  , BINARY},};
+
+const Command cmdsU[NUM_COMMANDS] = {{"sin",  SIZE_SIN,  OPERATOR, FUN_SIN , UNARY },\
+                                     {"cos",  SIZE_COS,  OPERATOR, FUN_COS , UNARY },\
+                                     {"^",    SIZE_POW,  OPERATOR, FUN_POW , BINARY},\
+                                     {"sqrt", SIZE_SQRT, OPERATOR, FUN_SQRT, UNARY },\
+                                     {"ln",   SIZE_LN,   OPERATOR, FUN_LN  , UNARY } };
+
 
 enum Order
 {
@@ -144,6 +160,13 @@ struct Tree
     size_t changes_num;
 };
 
+
+struct Token
+{
+    Type type;
+    tag_data data;
+};
+
 TreeError ConstructorTree(Tree* tree);
 void       DestructorTree(Tree* tree);
 
@@ -156,13 +179,15 @@ Node* CreateOperator(Operators value, Node* left, Node* right);
 
 void DeleteNode(Node* node);
 
-Node* GetG(Parse* parse);
-Node* GetE(Parse* parse);
-Node* GetT(Parse* parse);
-Node* GetP(Parse* parse);
-Node* GetN(Parse* parse);
+Node* GetG(Text* buf, Token* tokens, size_t* token_i);
+Node* GetE(Text* buf, Token* tokens, size_t* token_i);
+Node* GetT(Text* buf, Token* tokens, size_t* token_i);
+Node* GetP(Text* buf, Token* tokens, size_t* token_i);
+Node* GetC(Text* buf, Token* tokens, size_t* token_i);
 
-void syntax_assert(bool x, Parse* parse);
+Node* GetN(Text* buf, Token* tokens, size_t* token_i);
+
+void syntax_assert(bool x, Text* buf);
 
 
 

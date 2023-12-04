@@ -7,18 +7,8 @@
 
 int main()
 {   
-    Text buffer = {};
-    CreateBuffer(&buffer, "file.txt");
-
-    // Tree tree   = {};
-    
-    // Parse parse = {};
-    // parse.str = buffer.position;
-    // parse.position = 0;
-    // Node* root = GetG(&parse);
-    // PrintNode(root, stdout, IN_ORDER);
-
-    // DeleteNode(root);
+    Text buf = {};
+    CreateBuffer(&buf, "file.txt");
 
     Tree tree   = {};
     Tree tree_dif = {};
@@ -28,31 +18,27 @@ int main()
 
     Var vars[MAX_NUM_VARS] = {};
 
-    //printf("%s\n", buffer);
 
-    char* position = buffer.position;
+    char* position = buf.str;
 
-    TreeError error = ReadTree(&tree, &tree.root, &position, IN_ORDER, vars, buffer);
+    TreeError error = ReadTree(&tree, &tree.root, &position, IN_ORDER, vars, buf);
     if (error != NO_ERROR)
     {
         DumpErrors(error);
         DestructorTree(&tree);
         return 1;
     }
-    
 
-    GraphicDump(&tree, NULL);
-    PrintNode(tree.root, stdout, IN_ORDER, NOTHING);
     Simplification(&tree);
-    PrintNode(tree.root, stdout, IN_ORDER, NOTHING);
+    //PrintNode(tree.root, stdout, IN_ORDER, NOTHING);
 
-    PrintNameTable(&tree, vars);
+    AssignVariables(&tree, vars);
 
     size_t power = 3;
     size_t real_var = 0;
 
     if (tree.num_vars != 1)
-        real_var = GetRealVar(vars); 
+        real_var = GetDifferentiationVar(vars);
 
 
     FILE* To = fopen("latex.txt", "w");
@@ -78,44 +64,42 @@ int main()
     fprintf(To, "Разложение по Тейлору:\\\\\n");
     fprintf(To, "$f(x) = ");
     tree_tay.root = Taylortition(&tree, power, vars, real_var);
-    Simplification(&tree_tay);
-
-
-    PrintNode(tree_tay.root, stdout, IN_ORDER, NOTHING);
-
-    LatexPrintNode(tree_tay.root, To);
     
-    fprintf(To, " + o( ( x - %lg ) ^ %lu )$\\\\\n", vars[0].value, power);
+    Simplification(&tree_tay);
+    GraphicDump(&tree_tay, NULL);
 
-    Tree tree_tanget = {};
-    tree_tanget.root = GetTangetTree(&tree, vars, real_var);
-    Simplification(&tree_tanget);
 
-    fprintf(To, "Касательная в точке %s = %lg:\\\\\n", vars[real_var].name ,vars[real_var].value);
-    fprintf(To, "$f(x) = ");
-    LatexPrintNode(tree_tanget.root, To);
-    fprintf(To, "$\\\\\n");
-    //GraphicDump(&tree_tanget, NULL);
+    // LatexPrintNode(tree_tay.root, To);
+    
+    // fprintf(To, " + o( ( x - %lg ) ^ %lu )$\\\\\n", vars[0].value, power);
 
-    AddGraphics(&tree, &tree_tay, &tree_tanget);
+    // Tree tree_tanget = {};
+    // tree_tanget.root = GetTangetTree(&tree, vars, real_var);
+    // Simplification(&tree_tanget);
 
-    fprintf(To, "\\includepdf{function1.pdf}\n");
-    fprintf(To, "\\includepdf{function2.pdf}\n");
+    // fprintf(To, "Касательная в точке %s = %lg:\\\\\n", vars[real_var].name ,vars[real_var].value);
+    // fprintf(To, "$f(x) = ");
+    // LatexPrintNode(tree_tanget.root, To);
+    // fprintf(To, "$\\\\\n");
 
-    LatexPrintEnding(To);
+    // AddGraphics(&tree, &tree_tay, &tree_tanget);
 
-    fclose(To);
+    // fprintf(To, "\\includepdf{function1.pdf}\n");
+    // fprintf(To, "\\includepdf{function2.pdf}\n");
 
-    system("pdflatex \"latex.txt\"");
+    // LatexPrintEnding(To);
 
+    // fclose(To);
+
+    // system("pdflatex \"latex.txt\"");
 
     DestructorTree(&tree);
-    DestructorTree(&tree_tanget);
+    //DestructorTree(&tree_tanget);
     DestructorTree(&tree_dif);
     DestructorTree(&tree_tay);
 
 
-    DeleteBuffer(&buffer);
+    DeleteBuffer(&buf);
 
     return 0;
 }
