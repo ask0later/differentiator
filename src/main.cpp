@@ -48,7 +48,8 @@ int main()
     size_t real_var = 0;
 
     if (tree.num_vars != 1)
-        real_var = GetRealVar(vars);    
+        real_var = GetRealVar(vars); 
+
 
     FILE* To = fopen("latex.txt", "w");
 
@@ -73,11 +74,29 @@ int main()
     fprintf(To, "$f(x) = ");
     tree_tay.root = Taylortition(&tree, power, vars, real_var);
     Simplification(&tree_tay);
+
+
+    PrintNode(tree_tay.root, stdout, IN_ORDER, NOTHING);
+
     LatexPrintNode(tree_tay.root, To);
     
     fprintf(To, " + o( ( x - %lg ) ^ %lu )$\\\\\n", vars[0].value, power);
 
-    AddGraphics(To, &tree, &tree_tay);
+    Tree tree_tanget = {};
+    tree_tanget.root = GetTangetTree(&tree, vars, real_var);
+    Simplification(&tree_tanget);
+
+    fprintf(To, "Касательная в точке %s = %lg:\\\\\n", vars[real_var].name ,vars[real_var].value);
+    fprintf(To, "$f(x) = ");
+    LatexPrintNode(tree_tanget.root, To);
+    fprintf(To, "$\\\\\n");
+    //GraphicDump(&tree_tanget, NULL);
+
+    AddGraphics(To, &tree, &tree_tay, &tree_tanget);
+
+    fprintf(To, "\\includepdf{function1.pdf}\n");
+    fprintf(To, "\\includepdf{function1.pdf}\n");
+
     LatexPrintEnding(To);
 
     fclose(To);
@@ -86,6 +105,7 @@ int main()
 
 
     DestructorTree(&tree);
+    DestructorTree(&tree_tanget);
     DestructorTree(&tree_dif);
     DestructorTree(&tree_tay);
 

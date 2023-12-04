@@ -32,6 +32,7 @@ double Evaluate(Tree* tree, Node* node, Var* vars);
 Node* Copynator(Node* node);
 Node* Differentiator(Node* node, Var vars, FILE* To, bool need_print);
 Node* Taylortition(Tree* tree, size_t power, Var* vars, size_t real_var);
+Node* GetTangetTree(Tree* tree, Var* vars, size_t real_var);
 
 size_t Factorial(size_t n);
 
@@ -49,7 +50,7 @@ void LatexPrintBeginning(FILE* To);
 void LatexPrintDiff(FILE* To);
 void LatexPrintEnding(FILE* To);
 
-void PrintTangentEquation(Tree* tree, FILE* To, Var* vars, size_t real_var);
+
 void PrintSolutionDiff(Node* node, FILE* To, Var vars);
 
 

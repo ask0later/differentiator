@@ -22,6 +22,14 @@ const size_t MAX_NUM_VARS  = 10;
 
 typedef char* Elem_t;
 
+
+enum for_what
+{
+    NOTHING,
+    GNUPLOT,
+    LATEX
+};
+
 enum UnaryorBinary
 {
     UNARY  = 1,
@@ -170,13 +178,12 @@ void syntax_assert(bool x, Parse* parse);
 
 
 TreeError ReadTree(Tree* tree, Node** node, char** position, Order order_value, Var* names, Text buffer);
-TreeError  PrintNode(Node* node, FILE*   To, Order order_value);
-void PrintObject(Node* node, FILE* To);
-void PrintOperator(Operators value_Operators, FILE* TO);
-void PrintFunction(Functions value_Functions, FILE* To);
+TreeError  PrintNode(Node* node, FILE* To, Order order_value, for_what for_what);
+void PrintObject(Node* node, FILE* To, for_what for_what);
+void PrintOperator(Operators value_Operators, FILE* To);
+void PrintFunction(Functions value_Functions, FILE* To, for_what for_what);
 
 TreeError LatexPrintNode(Node* node, FILE* To);
-void LatexPrintObject(Node* node, FILE* To);
 void LatexPrintOperator(Operators value_Operators, FILE* To);
 
 
@@ -195,6 +202,6 @@ TreeError  Swap(Node* addresses[], int left, int right);
 void DumpErrors(TreeError error);
 
 ///////
-void AddGraphics(FILE* To, Tree* tree1, Tree* tree2);
+void AddGraphics(FILE* To, Tree* tree1, Tree* tree2, Tree* tree3);
 
 #endif

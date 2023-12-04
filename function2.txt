@@ -1,10 +1,11 @@
-set terminal png size 800, 600
-set output "function2.png"
-set xlabel "X"
-set ylabel "F(X)"
-set grid
-set yrange[-10:10]
-set xrange[-3:3]
-set title "Function and Tanget" font "Helvetica Bold, 20"
-set terminal png size 800, 600
-plot  ( (  sin ( x  )  )  + ( 5 )  )  lc rgb "red" ,  5  + 1  * ( x  - 0 ) lc rgb "green"
+set term pdfcairo enhanced size 20cm,15cm font ',15' linewidth 3
+set output 'function2.pdf'
+set grid xtics ytics mxtics mytics
+set xlabel 'x' font 'Sans,20'
+set ylabel 'f(x)' font 'Sans,20'
+set title 'Function and Tanget' font 'Sans,25'
+set yrange[-3:3]
+set xrange[-10:10]
+set title 'Function and Tanget' font "Helvetica Bold, 20"
+plot (  sin ( x )  )  lc rgb "red" , ( x )  lc rgb "green"
+set term pop

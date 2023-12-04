@@ -2,6 +2,7 @@
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
 \usepackage[english,russian]{babel}
+\usepackage{pdfpages}
 \usepackage{amsmath,amsfonts,amssymb,amsthm,mathtools}
 \usepackage[left=10mm, top=10mm, right=10mm, bottom=20mm, nohead, nofoot]{geometry}
 \usepackage{wasysym}
@@ -16,7 +17,7 @@
 Это задание, было дано ученику первым номером, как самое простое:\\
 1. Найдите производную f(x);\\
 2. Разложите f(x) по формуле Тейлора при x --> 0;\\
-3. И тд.\\
+3. Построить график функции и касательной в точке\\
 $f(x) = (  sin x ) $\\
 Производная высчитывается относительно переменной <x> при помощи элементарых правил арифметики и очевидных преобразований\\
 Путем нехитрых преобразований.\\
@@ -26,6 +27,10 @@ $(x)' =  1$\\
 В итоге мы получаем.\\
 $f'(x) = (  cos x ) $\\
 Разложение по Тейлору:\\
-$f(x) = ( x + ( ( (  \dfrac { -1 } { 6 }  )  \cdot ( x ^ {3} )  )  +  )  )  + o( ( x - 0 ) ^ 3 )$\\
+$f(x) = ( x + ( -0.166667 \cdot ( x ^ {3} )  )  )  + o( ( x - 0 ) ^ 3 )$\\
+Касательная в точке x = 0:\\
+$f(x) = x$\\
+\includepdf{function1.pdf}
+\includepdf{function1.pdf}
 \end{flushleft}
 \end{document}

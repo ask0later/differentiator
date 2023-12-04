@@ -216,6 +216,7 @@ void LatexPrintBeginning(FILE* To)
                 "\\usepackage[T1]{fontenc}\n"
                 "\\usepackage[utf8]{inputenc}\n"
                 "\\usepackage[english,russian]{babel}\n"
+                "\\usepackage{pdfpages}\n"
                 "\\usepackage{amsmath,amsfonts,amssymb,amsthm,mathtools}\n"
                 "\\usepackage[left=10mm, top=10mm, right=10mm, bottom=20mm, nohead, nofoot]{geometry}\n"
                 "\\usepackage{wasysym}\n"
@@ -231,7 +232,7 @@ void LatexPrintBeginning(FILE* To)
                 "Это задание, было дано ученику первым номером, как самое простое:\\\\\n"
                 "1. Найдите производную f(x);\\\\\n"
                 "2. Разложите f(x) по формуле Тейлора при x --> 0;\\\\\n"
-                "3. И тд.\\\\\n");
+                "3. Построить график функции и касательной в точке\\\\\n");
 }
 void LatexPrintEnding(FILE* To)
 {
@@ -275,43 +276,77 @@ size_t GetRealVar(Var* vars)
     return GetRealVar(vars);
 }
 
-void AddGraphics(FILE* To, Tree* tree1, Tree* tree2)
+void AddGraphics(FILE* To, Tree* tree1, Tree* tree2, Tree* tree3)
 {
     FILE* FileFunc = fopen("function.txt", "w");
-    PrintNode(tree1->root, FileFunc, IN_ORDER);
+    PrintNode(tree1->root, FileFunc, IN_ORDER, GNUPLOT);
     fclose(FileFunc);
 
     FILE* TaylorFunc = fopen("taylor.txt", "w");
-    PrintNode(tree2->root, TaylorFunc, IN_ORDER);
+    PrintNode(tree2->root, TaylorFunc, IN_ORDER, GNUPLOT);
     fclose(TaylorFunc);
+
+    FILE* TangetFunc = fopen("tanget.txt", "w");
+    PrintNode(tree3->root, TangetFunc, IN_ORDER, GNUPLOT);
+    fclose(TangetFunc);
     
     char function1[1024] = {};
     char function2[4096] = {};
+    char function3[2048] = {};
+    
     ReadFromTextToBuffer(function1, "function.txt");
     ReadFromTextToBuffer(function2, "taylor.txt");
-    printf("%s\n", function1);
-    printf("%s\n", function2);
+    ReadFromTextToBuffer(function3, "tanget.txt");
+    // printf("%s\n", function1);
+    // printf("%s\n", function2);
 
-    BuildGraphic("png", "function1.png", "function1.txt", function1, function2, "[-3:3]", "[-10:10]", "Function and Taylor");
+    BuildGraphic("pdf", "function1.pdf", "function1.txt", function1, function2, "[-3:3]", "[-10:10]", "Function and Taylor");
     system("gnuplot -c function1.txt");
+
+    BuildGraphic("pdf", "function2.pdf", "function2.txt", function1, function3, "[-3:3]", "[-10:10]", "Function and Tanget");
+    system("gnuplot -c function2.txt");
 
 
     //fprintf(To, "\\includepdf{function1.pdf}\n");
     return;
 }
 
-void PrintTangentEquation(Tree* tree, FILE* To, Var* vars, size_t real_var)
+Node* GetTangetTree(Tree* tree, Var* vars, size_t real_var)
 {
-    fprintf(To, " %lg ", Evaluate(tree, tree->root, vars));
+    Tree tree_tanget = {};
 
     Tree tree_dif = {};
     tree_dif.root = Differentiator(tree->root, vars[real_var], NULL, false);
     tree_dif.num_vars = 1;
+    printf("%lg and %lg\n", Evaluate(tree, tree->root, vars), Evaluate(&tree_dif, tree_dif.root, vars));
 
-    fprintf(To, " + %lg ", Evaluate(&tree_dif, tree_dif.root, vars));
-    fprintf(To, " * ( %s - %lg )", vars[0].name, vars[0].value);
+    #define _NUM(value) CreateNumber(value, NULL, NULL)
+
+    #define _ADD(L, R) CreateOperator(OP_ADD,  L, R)
+    #define _SUB(L, R) CreateOperator(OP_SUB,  L, R)
+    #define _MUL(L, R) CreateOperator(OP_MUL,  L, R)
+    
+    #define _d(node) Differentiator(node, vars, To, need_print)
+    #define _c(node) Copynator(node)
+    
+    #define _VAR(x) CreateVariable(x, NULL, NULL)
+
+    tree_tanget.root = _ADD(
+                    _NUM(Evaluate(tree, tree->root, vars)),
+                    _MUL(
+                        _NUM(Evaluate(&tree_dif, tree_dif.root, vars)),
+                        _SUB(_VAR(vars[real_var].name), _NUM(vars[real_var].value))
+                    ));
 
     DeleteNode(tree_dif.root);
+
+    #undef _ADD 
+    #undef _SUB 
+    #undef _MUL 
+    #undef _NUM
+    #undef _VAR
+
+    return tree_tanget.root;
 }
 
 void PrintSolutionDiff(Node* node, FILE* To, Var vars)
@@ -409,8 +444,6 @@ void PrintSolutionDiff(Node* node, FILE* To, Var vars)
     return;
 }
 
-
-
 Node* Taylortition(Tree* tree, size_t power, Var* vars, size_t real_var)
 {
     Tree dif_next = {};
@@ -480,10 +513,15 @@ void BuildGraphic(const char* Type, const char* ToGnuplot, const char* FromGnupl
     char betwen[3]   = {};
     char func2[256]  = {};
     char temp[256]   = {};
+    
 
-    sprintf(str,  "set terminal %s size 800, 600\n"
+
+    sprintf(str,  "set term pdfcairo enhanced size 20cm,15cm font ',15' linewidth 3\n"
                   "set output '%s'\n"
-                  "set xlabel \"X\"\n" "set ylabel \"F(X)\"\n" "set grid\n", Type, ToGnuplot);
+                  "set grid xtics ytics mxtics mytics\n"
+                  "set xlabel 'x' font 'Sans,20'\n" 
+                  "set ylabel 'f(x)' font 'Sans,20'\n"
+                  "set title '%s' font 'Sans,25'\n", ToGnuplot, title);
     
     if (yrange)
         sprintf(temp, "set yrange%s\n", yrange);
@@ -500,7 +538,7 @@ void BuildGraphic(const char* Type, const char* ToGnuplot, const char* FromGnupl
     strcat(str, temp);
 
     sprintf(temp, "set title '%s' font \"Helvetica Bold, 20\"\n"
-                  "set terminal %s size 800, 600\nplot", title, Type);
+                  "plot", title);
 
     strcat(str, temp);
     
@@ -512,8 +550,10 @@ void BuildGraphic(const char* Type, const char* ToGnuplot, const char* FromGnupl
     if (function2)
         sprintf(func2, "%s lc rgb \"green\"", function2);
 
+
     FILE* ToGnup = fopen(FromGnuplot, "w");
     fprintf(ToGnup, "%s %s %s %s", str, func1, betwen, func2);
+    fprintf(ToGnup, "\nset term pop\n");
     fclose(ToGnup);
 }
 
@@ -603,8 +643,21 @@ TreeError RemoveDummyElements(Tree* tree, Node** node)
     Node** right = &(*node)->right;
 
     Node* copy_node = {};
-
+    Node* copy = {};
     bool check = false;
+
+    if (((*node)->type == OPERATOR) && (((*node)->left == NULL) || ((*node)->right == NULL)))
+    {
+        if ((*node)->left)
+            copy = Copynator((*node)->left);
+        if ((*node)->right)
+            copy = Copynator((*node)->right);
+        
+        DeleteNode(*node);
+        (*node) = copy;
+        return NO_ERROR;
+    }
+
     if (((*node)->right))
     {
         if (((*node)->type == OPERATOR) && ((*right)->type == NUM))

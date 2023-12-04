@@ -1,12 +1,4 @@
 digraph DotGraph
 {
-    Node16 [shape="box", color="black", fontcolor="black", fillcolor="#EE204D", style="filled", weight="1", label=" * "];
-    Node144 [shape="box", color="black", fontcolor="black", fillcolor="#21C912", style="filled", weight="1", label="x"];
-    Node16 -> Node144 [color="black", style="solid", weight="1", label=""];
-    Node272 [shape="box", color="black", fontcolor="black", fillcolor="#EE204D", style="filled", weight="1", label=" + "];
-    Node400 [shape="box", color="black", fontcolor="black", fillcolor="#21C912", style="filled", weight="1", label="x"];
-    Node272 -> Node400 [color="black", style="solid", weight="1", label=""];
-    Node528 [shape="box", color="black", fontcolor="black", fillcolor="#21C912", style="filled", weight="1", label="y"];
-    Node272 -> Node528 [color="black", style="solid", weight="1", label=""];
-    Node16 -> Node272 [color="black", style="solid", weight="1", label=""];
+    Node18000 [shape="box", color="black", fontcolor="black", fillcolor="#21C912", style="filled", weight="1", label="x"];
 }

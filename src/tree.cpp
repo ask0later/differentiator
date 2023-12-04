@@ -16,10 +16,12 @@ Node* CreateVariable(char* value, Node* left, Node* right)
     Node* node = (Node*) calloc(1, sizeof(Node));
     if (!node) {return 0;}
 
+    node->type = VAR;
+    
     node->left   = left;
     node->right  = right;
 
-    node->type = VAR;
+    
 
     node->data.variable = strdup(value);
 
@@ -31,10 +33,12 @@ Node* CreateNumber(double value, Node* left, Node* right)
     Node* node = (Node*) calloc(1, sizeof(Node));
     if (!node) {return 0;}
 
+    node->type = NUM;
+
     node->left   = left;
     node->right  = right;
 
-    node->type = NUM;
+    
 
     node->data.value = value;
 
@@ -46,10 +50,12 @@ Node* CreateOperator(Operators value, Node* left, Node* right)
     Node* node = (Node*) calloc(1, sizeof(Node));
     if (!node) {return 0;}
 
+    node->type = OPERATOR;
+
     node->left   = left;
     node->right  = right;
 
-    node->type = OPERATOR;
+    
 
     node->data.value_op = value;
 
@@ -207,8 +213,6 @@ void syntax_assert(bool x, Parse* parse)
         exit(1);
     }
 }
-
-
 TreeError LatexPrintNode(Node* node, FILE* To)
 {
     if (!node) {return NO_ERROR;}
@@ -228,7 +232,7 @@ TreeError LatexPrintNode(Node* node, FILE* To)
 
     if (order == PRE_ORDER)
     {
-        LatexPrintObject(node, To);
+        PrintObject(node, To, LATEX);
         fprintf(To, "{ "); // for defra
     }
 
@@ -245,7 +249,7 @@ TreeError LatexPrintNode(Node* node, FILE* To)
     }
 
     if (order == IN_ORDER)
-        LatexPrintObject(node, To);
+        PrintObject(node, To, LATEX);
     
     if (node->type == FUNCTION)
     {
@@ -284,7 +288,7 @@ TreeError LatexPrintNode(Node* node, FILE* To)
 
 
 
-TreeError PrintNode(Node* node, FILE* To, Order order_value)
+TreeError PrintNode(Node* node, FILE* To, Order order_value, for_what for_what)
 {
     if (!node) {return NO_ERROR;}
     if (To == NULL) {return FILE_NOT_OPEN;}
@@ -294,46 +298,49 @@ TreeError PrintNode(Node* node, FILE* To, Order order_value)
     fprintf(To, "( ");
 
     if (order_value == PRE_ORDER)
-        PrintObject(node, To);
+        PrintObject(node, To, for_what);
 
     if (node->left)
     {
-        error = PrintNode(node->left, To, order_value);
+        error = PrintNode(node->left, To, order_value, for_what);
         if (error != NO_ERROR)
             return error;
     }
     
     if (order_value == IN_ORDER)
     {
-        PrintObject(node, To);
+        PrintObject(node, To, for_what);
     }
     
     if (node->right)
     {
-        error = PrintNode(node->right, To, order_value);
+        error = PrintNode(node->right, To, order_value, for_what);
         if (error != NO_ERROR)
             return error;
     }
     
     if (order_value == POST_ORDER)
-        PrintObject(node, To);
+        PrintObject(node, To, for_what);
 
     fprintf(To, " ) ");
 
     return NO_ERROR;
 }
 
-void LatexPrintObject(Node* node, FILE* To)
+void PrintObject(Node* node, FILE* To, for_what for_what)
 {
     if (node->type == NUM)
         fprintf(To, "%lg", node->data.value);
     else if (node->type == OPERATOR)
     {
-        LatexPrintOperator(node->data.value_op, To);
+        if (for_what == LATEX)
+            LatexPrintOperator(node->data.value_op, To);
+        else
+            PrintOperator(node->data.value_op, To);
     }
     else if (node->type == FUNCTION)
     {
-        PrintFunction(node->data.value_fun, To);
+        PrintFunction(node->data.value_fun, To, for_what);
     }
     else if (node->type == VAR)
     {
@@ -341,25 +348,7 @@ void LatexPrintObject(Node* node, FILE* To)
     }
 }
 
-void PrintObject(Node* node, FILE* To)
-{
-    if (node->type == NUM)
-        fprintf(To, "%lg", node->data.value);
-    else if (node->type == OPERATOR)
-    {
-        PrintOperator(node->data.value_op, To);
-    }
-    else if (node->type == FUNCTION)
-    {
-        PrintFunction(node->data.value_fun, To);
-    }
-    else if (node->type == VAR)
-    {
-        fprintf(To, "%s", node->data.variable);
-    }
-}
-
-void PrintFunction(Functions value_Functions, FILE* To)
+void PrintFunction(Functions value_Functions, FILE* To, for_what for_what)
 {
     switch(value_Functions)
     {
@@ -370,7 +359,10 @@ void PrintFunction(Functions value_Functions, FILE* To)
             fprintf(To, " cos ");
             break;
         case FUN_POW:
-            fprintf(To, " ^ ");
+            if (for_what == GNUPLOT)
+                fprintf(To, "**");
+            else
+                fprintf(To, " ^ ");
             break;
         case FUN_SQRT:
             fprintf(To, " sqrt ");
