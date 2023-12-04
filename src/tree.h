@@ -40,7 +40,6 @@ enum Type
 {
     NUM = 1,
     OPERATOR,
-    FUNCTION,
     VAR
 };
 
@@ -49,12 +48,8 @@ enum Operators
     OP_ADD = 1,
     OP_SUB,
     OP_MUL,
-    OP_DIV
-};
-
-enum Functions
-{
-    FUN_SIN = 1,
+    OP_DIV,
+    FUN_SIN,
     FUN_COS,
     FUN_POW,
     FUN_SQRT,
@@ -92,11 +87,11 @@ const Command cmds[NUM_COMMANDS] = {{"+",    SIZE_ADD,  OPERATOR, OP_ADD  , BINA
                                     {"-",    SIZE_SUB,  OPERATOR, OP_SUB  , BINARY},\
                                     {"*",    SIZE_MUL,  OPERATOR, OP_MUL  , BINARY},\
                                     {"/",    SIZE_DIV,  OPERATOR, OP_DIV  , BINARY},\
-                                    {"sin",  SIZE_SIN,  FUNCTION, FUN_SIN , UNARY },\
-                                    {"cos",  SIZE_COS,  FUNCTION, FUN_COS , UNARY },\
-                                    {"^",    SIZE_POW,  FUNCTION, FUN_POW , BINARY},\
-                                    {"sqrt", SIZE_SQRT, FUNCTION, FUN_SQRT, UNARY },\
-                                    {"ln",   SIZE_LN,   FUNCTION, FUN_LN  , UNARY } };
+                                    {"sin",  SIZE_SIN,  OPERATOR, FUN_SIN , UNARY },\
+                                    {"cos",  SIZE_COS,  OPERATOR, FUN_COS , UNARY },\
+                                    {"^",    SIZE_POW,  OPERATOR, FUN_POW , BINARY},\
+                                    {"sqrt", SIZE_SQRT, OPERATOR, FUN_SQRT, UNARY },\
+                                    {"ln",   SIZE_LN,   OPERATOR, FUN_LN  , UNARY } };
 
 enum Order
 {
@@ -104,9 +99,6 @@ enum Order
     IN_ORDER   = 2,
     POST_ORDER = 3,
 };
-
-
-
 
 enum TreeError
 {
@@ -133,7 +125,6 @@ union tag_data
     double         value;
     char*       variable;
     Operators   value_op;
-    Functions  value_fun;
 };
 
 struct Node
@@ -162,7 +153,6 @@ Node* CreateNode(Type type, void* value, Node* left, Node* right);
 Node* CreateVariable(char* value, Node* left, Node* right);
 Node* CreateNumber(double value, Node* left, Node* right);
 Node* CreateOperator(Operators value, Node* left, Node* right);
-Node* CreateFunction(Functions value, Node* left, Node* right);
 
 void DeleteNode(Node* node);
 
@@ -180,11 +170,10 @@ void syntax_assert(bool x, Parse* parse);
 TreeError ReadTree(Tree* tree, Node** node, char** position, Order order_value, Var* names, Text buffer);
 TreeError  PrintNode(Node* node, FILE* To, Order order_value, for_what for_what);
 void PrintObject(Node* node, FILE* To, for_what for_what);
-void PrintOperator(Operators value_Operators, FILE* To);
-void PrintFunction(Functions value_Functions, FILE* To, for_what for_what);
+void PrintOperator(Operators value_Operators, FILE* To, for_what for_what);
 
 TreeError LatexPrintNode(Node* node, FILE* To);
-void LatexPrintOperator(Operators value_Operators, FILE* To);
+
 
 
 TreeError SkipSpaces(char** position);
@@ -202,6 +191,6 @@ TreeError  Swap(Node* addresses[], int left, int right);
 void DumpErrors(TreeError error);
 
 ///////
-void AddGraphics(FILE* To, Tree* tree1, Tree* tree2, Tree* tree3);
+void AddGraphics(Tree* tree1, Tree* tree2, Tree* tree3);
 
 #endif

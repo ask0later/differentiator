@@ -40,7 +40,11 @@ int main()
         return 1;
     }
     
+
+    GraphicDump(&tree, NULL);
+    PrintNode(tree.root, stdout, IN_ORDER, NOTHING);
     Simplification(&tree);
+    PrintNode(tree.root, stdout, IN_ORDER, NOTHING);
 
     PrintNameTable(&tree, vars);
 
@@ -60,7 +64,8 @@ int main()
     
     fprintf(To, "Производная высчитывается относительно переменной <%s> при помощи элементарых правил арифметики и очевидных преобразований\\\\\n", vars[real_var].name);
 
-    tree_dif.root = Differentiator(tree.root, vars[real_var], To, true);
+    
+    tree_dif.root = Differentiate(tree.root, vars[real_var], To, true);
     Simplification(&tree_dif);
 
     fprintf(To, "В итоге мы получаем.\\\\\n");
@@ -92,10 +97,10 @@ int main()
     fprintf(To, "$\\\\\n");
     //GraphicDump(&tree_tanget, NULL);
 
-    AddGraphics(To, &tree, &tree_tay, &tree_tanget);
+    AddGraphics(&tree, &tree_tay, &tree_tanget);
 
     fprintf(To, "\\includepdf{function1.pdf}\n");
-    fprintf(To, "\\includepdf{function1.pdf}\n");
+    fprintf(To, "\\includepdf{function2.pdf}\n");
 
     LatexPrintEnding(To);
 

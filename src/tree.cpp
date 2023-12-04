@@ -17,7 +17,7 @@ Node* CreateVariable(char* value, Node* left, Node* right)
     if (!node) {return 0;}
 
     node->type = VAR;
-    
+
     node->left   = left;
     node->right  = right;
 
@@ -62,20 +62,6 @@ Node* CreateOperator(Operators value, Node* left, Node* right)
     return node;
 }
 
-Node* CreateFunction(Functions value, Node* left, Node* right)
-{
-    Node* node = (Node*) calloc(1, sizeof(Node));
-    if (!node) {return 0;}
-
-    node->left   = left;
-    node->right  = right;
-
-    node->type = FUNCTION;
-
-    node->data.value_fun = value;
-
-    return node;
-}
 
 Node* CreateNode(Type type, void* value, Node* left, Node* right)
 {
@@ -98,9 +84,6 @@ Node* CreateNode(Type type, void* value, Node* left, Node* right)
         break;
     case OPERATOR:
         node->data.value_op  = *((Operators*) value);
-        break;
-    case FUNCTION:
-        node->data.value_fun = *((Functions*) value);
         break;
     case VAR:
         node->data.variable = strdup((const char*) value);
@@ -251,9 +234,9 @@ TreeError LatexPrintNode(Node* node, FILE* To)
     if (order == IN_ORDER)
         PrintObject(node, To, LATEX);
     
-    if (node->type == FUNCTION)
+    if (node->type == OPERATOR)
     {
-        if ((node->data.value_fun == FUN_LN) || (node->data.value_fun == FUN_POW))
+        if ((node->data.value_op == FUN_LN) || (node->data.value_op == FUN_POW))
             fprintf(To, "{");
     }
 
@@ -274,9 +257,9 @@ TreeError LatexPrintNode(Node* node, FILE* To)
         fprintf(To, " } "); // for defra
     }
 
-    if (node->type == FUNCTION)
+    if (node->type == OPERATOR)
     {
-        if ((node->data.value_fun == FUN_LN) || (node->data.value_fun == FUN_POW))
+        if ((node->data.value_op == FUN_LN) || (node->data.value_op == FUN_POW))
             fprintf(To, "}");
     }
 
@@ -333,14 +316,7 @@ void PrintObject(Node* node, FILE* To, for_what for_what)
         fprintf(To, "%lg", node->data.value);
     else if (node->type == OPERATOR)
     {
-        if (for_what == LATEX)
-            LatexPrintOperator(node->data.value_op, To);
-        else
-            PrintOperator(node->data.value_op, To);
-    }
-    else if (node->type == FUNCTION)
-    {
-        PrintFunction(node->data.value_fun, To, for_what);
+        PrintOperator(node->data.value_op, To, for_what);
     }
     else if (node->type == VAR)
     {
@@ -348,10 +324,29 @@ void PrintObject(Node* node, FILE* To, for_what for_what)
     }
 }
 
-void PrintFunction(Functions value_Functions, FILE* To, for_what for_what)
+
+void PrintOperator(Operators value_Operators, FILE* To, for_what for_what)
 {
-    switch(value_Functions)
+    switch(value_Operators)
     {
+        case OP_ADD:
+            fprintf(To, " + ");
+            break;
+        case OP_SUB:
+            fprintf(To, " - ");
+            break;
+        case OP_MUL:
+            if (for_what == LATEX)
+                fprintf(To, " \\cdot ");
+            else
+                fprintf(To, " * ");
+            break;
+        case OP_DIV:
+            if (for_what == LATEX)
+                fprintf(To, " \\dfrac ");
+            else
+                fprintf(To, " / ");
+            break;
         case FUN_SIN:
             fprintf(To, " sin ");
             break;
@@ -369,51 +364,7 @@ void PrintFunction(Functions value_Functions, FILE* To, for_what for_what)
             break;
         case FUN_LN:
             fprintf(To, " ln ");
-            break;    
-        default:
-            printf("extra");
-            break;
-    }
-}
-
-void LatexPrintOperator(Operators value_Operators, FILE* To)
-{
-    switch(value_Operators)
-    {
-        case OP_ADD:
-            fprintf(To, " + ");
-            break;
-        case OP_SUB:
-            fprintf(To, " - ");
-            break;
-        case OP_MUL:
-            fprintf(To, " \\cdot ");
-            break;
-        case OP_DIV:
-            fprintf(To, " \\dfrac ");
-            break;
-        default:
-            printf("extra");
-            break;
-    }
-}
-
-void PrintOperator(Operators value_Operators, FILE* To)
-{
-    switch(value_Operators)
-    {
-        case OP_ADD:
-            fprintf(To, " + ");
-            break;
-        case OP_SUB:
-            fprintf(To, " - ");
-            break;
-        case OP_MUL:
-            fprintf(To, " * ");
-            break;
-        case OP_DIV:
-            fprintf(To, " / ");
-            break;
+            break;  
         default:
             printf("extra");
             break;
@@ -457,8 +408,6 @@ TreeError PasteObject(Tree* tree, char* source, Node** node, Var* names)
             (*node)->type  = cmds[i].type;
             if ((*node)->type == OPERATOR)
                 (*node)->data.value_op  = (Operators) cmds[i].value;
-            else if ((*node)->type == FUNCTION)
-                (*node)->data.value_fun = (Functions) cmds[i].value;
             return NO_ERROR;
         }
     }

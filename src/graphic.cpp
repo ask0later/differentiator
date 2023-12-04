@@ -51,16 +51,6 @@ TreeError GraphicDumpNode(Node* node)
             case OP_DIV:
                 sprintf(str, " / ");
                 break;
-            default:
-                printf("extra");
-                break;
-        }
-    }
-    else if (node->type == FUNCTION)
-    {
-        dtNodeStyle().fillcolor("#F8D568");//HEX_YELLOW        
-        switch(node->data.value_fun)
-        {
             case FUN_SIN:
                 sprintf(str, " sin ");
                 break;

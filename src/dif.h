@@ -30,7 +30,7 @@ const char* const funny_phrases[NUM_PHRASES] = {"Я лучше промолчу:
 double Evaluate(Tree* tree, Node* node, Var* vars);
 
 Node* Copynator(Node* node);
-Node* Differentiator(Node* node, Var vars, FILE* To, bool need_print);
+Node* Differentiate(Node* node, Var vars, FILE* To, bool need_print);
 Node* Taylortition(Tree* tree, size_t power, Var* vars, size_t real_var);
 Node* GetTangetTree(Tree* tree, Var* vars, size_t real_var);
 
