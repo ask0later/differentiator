@@ -9,6 +9,8 @@ int main()
 {   
     Text buf = {};
     CreateBuffer(&buf, "file.txt");
+    Token tokens[MAX_NUM_TOKENS] = {};
+    Token* ip_tok = tokens;
 
     Tree tree   = {};
     Tree tree_dif = {};
@@ -20,16 +22,24 @@ int main()
 
 
     char* position = buf.str;
+    size_t i_token = 0;
 
-    TreeError error = ReadTree(&tree, &tree.root, &position, IN_ORDER, vars, buf);
-    if (error != NO_ERROR)
-    {
-        DumpErrors(error);
-        DestructorTree(&tree);
-        return 1;
-    }
+    CreateTokens(&ip_tok, &i_token, &buf);
+    i_token = 0;
+    tree.root = GetG(tokens, &i_token, vars);
+    tree.num_vars = 1;
+    
+
+    // TreeError error = ReadTree(&tree, &tree.root, &position, IN_ORDER, vars, buf);
+    // if (error != NO_ERROR)
+    // {
+    //     DumpErrors(error);
+    //     DestructorTree(&tree);
+    //     return 1;
+    // }
 
     Simplification(&tree);
+    
     //PrintNode(tree.root, stdout, IN_ORDER, NOTHING);
 
     AssignVariables(&tree, vars);
@@ -52,7 +62,9 @@ int main()
 
     
     tree_dif.root = Differentiate(tree.root, vars[real_var], To, true);
+    GraphicDump(&tree, &tree_dif);
     Simplification(&tree_dif);
+    
 
     fprintf(To, "В итоге мы получаем.\\\\\n");
     fprintf(To, "$f'(x) = ");
@@ -66,40 +78,41 @@ int main()
     tree_tay.root = Taylortition(&tree, power, vars, real_var);
     
     Simplification(&tree_tay);
-    GraphicDump(&tree_tay, NULL);
-
-
-    // LatexPrintNode(tree_tay.root, To);
     
-    // fprintf(To, " + o( ( x - %lg ) ^ %lu )$\\\\\n", vars[0].value, power);
 
-    // Tree tree_tanget = {};
-    // tree_tanget.root = GetTangetTree(&tree, vars, real_var);
-    // Simplification(&tree_tanget);
 
-    // fprintf(To, "Касательная в точке %s = %lg:\\\\\n", vars[real_var].name ,vars[real_var].value);
-    // fprintf(To, "$f(x) = ");
-    // LatexPrintNode(tree_tanget.root, To);
-    // fprintf(To, "$\\\\\n");
+    LatexPrintNode(tree_tay.root, To);
+    
+    fprintf(To, " + o( ( x - %lg ) ^ %lu )$\\\\\n", vars[0].value, power);
 
-    // AddGraphics(&tree, &tree_tay, &tree_tanget);
+    Tree tree_tanget = {};
+    tree_tanget.root = GetTangetTree(&tree, vars, real_var);
+    Simplification(&tree_tanget);
 
-    // fprintf(To, "\\includepdf{function1.pdf}\n");
-    // fprintf(To, "\\includepdf{function2.pdf}\n");
+    fprintf(To, "Касательная в точке %s = %lg:\\\\\n", vars[real_var].name ,vars[real_var].value);
+    fprintf(To, "$f(x) = ");
+    LatexPrintNode(tree_tanget.root, To);
+    fprintf(To, "$\\\\\n");
 
-    // LatexPrintEnding(To);
+    AddGraphics(&tree, &tree_tay, &tree_tanget);
 
-    // fclose(To);
+    fprintf(To, "\\includepdf{function1.pdf}\n");
+    fprintf(To, "\\includepdf{function2.pdf}\n");
 
-    // system("pdflatex \"latex.txt\"");
+    LatexPrintEnding(To);
+
+    fclose(To);
+
+    system("pdflatex \"latex.txt\"");
 
     DestructorTree(&tree);
-    //DestructorTree(&tree_tanget);
+    DestructorTree(&tree_tanget);
     DestructorTree(&tree_dif);
     DestructorTree(&tree_tay);
 
 
     DeleteBuffer(&buf);
+    DeleteTokens(&ip_tok);
 
     return 0;
 }

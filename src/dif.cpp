@@ -58,7 +58,7 @@ Node* Differentiate(Node* node, Var vars, FILE* To, bool need_print)
             
             case FUN_COS: return _SUB(_NUM(0), _MUL(_SIN(_c(node->left), _c(node->right)), _d(node->right)));
             
-            case FUN_POW:  
+            case FUN_POW:
                 if (node->right->type == NUM)
                     return _MUL(_d(node->left), _MUL(_NUM(node->right->data.value), _POW(_c(node->left), _NUM(node->right->data.value - 1))));
                 else if (node->left->type == NUM)
@@ -249,10 +249,6 @@ void AddGraphics(Tree* tree1, Tree* tree2, Tree* tree3)
     ReadFromTextToBuffer(function1, "function.txt");
     ReadFromTextToBuffer(function2, "taylor.txt");
     ReadFromTextToBuffer(function3, "tanget.txt");
-    printf("%s\n", function1);
-    printf("%s\n", function2);
-    printf("%s\n", function3);
-
 
     BuildGraphic("pdf", "function1.pdf", "function1.txt", function1, function2, "[-3:3]", "[-10:10]", "Function and Taylor");
     system("gnuplot -c function1.txt");
@@ -260,8 +256,6 @@ void AddGraphics(Tree* tree1, Tree* tree2, Tree* tree3)
     BuildGraphic("pdf", "function2.pdf", "function2.txt", function1, function3, "[-3:3]", "[-10:10]", "Function and Tanget");
     system("gnuplot -c function2.txt");
 
-
-    //fprintf(To, "\\includepdf{function1.pdf}\n");
     return;
 }
 
@@ -332,26 +326,14 @@ void PrintSolutionDiff(Node* node, FILE* To, Var vars)
                 {   
                             LatexPrintPow(node, To); break;
                 }
-                else //(node->left->type == NUM)
+                else if (node->left->type == NUM)
                 {
                             LatexPrintExp(node, To); break;
                 }
-                // else
-                // {
-                //             // fprintf(To, "(");
-                //             // LatexPrintNode(node->left, To);
-                //             // fprintf(To, ")'");
-                //             // fprintf(To, " \\cdot ");
-                //             // fprintf(To, "( (ln{");
-                //             // LatexPrintNode(node->left, To);
-                //             // fprintf(To, "})");
-                //             // fprintf(To, " \\cdot ");
-                //             // LatexPrintNode(node->right, To);
-                //             // fprintf(To, ")");   
-                //             // break;
-                    
-                //     //return _MUL(_ADD(_DIV(_MUL(_d(node->left), _c(node->right)), _c(node->left)), _MUL(_LN(NULL, _c(node->left)), _d(node->right))), _c(node));
-                // }
+                else
+                {
+                            LatexPrintExpandPow(node, To); break;
+                }
             
             case FUN_SQRT:  LatexPrintSqrt(node, To); break; 
 
@@ -408,13 +390,10 @@ Node* Taylortition(Tree* tree, size_t power, Var* vars, size_t real_var)
         dif_prev.root = dif_next.root;
         dif_next.root = NULL;
     }
-
     
     Node* copy = _c((*parent)->left);
     DeleteNode(*parent);
     *parent = copy;
-
-    //PrintNode(dif_prev.root, stdout, IN_ORDER, NOTHING);
     
     DeleteNode(dif_prev.root);
 
@@ -426,7 +405,6 @@ Node* Taylortition(Tree* tree, size_t power, Var* vars, size_t real_var)
 
 void BuildGraphic(const char* Type, const char* ToGnuplot, const char* FromGnuplot, char* function1, char* function2, const char* yrange, const char* xrange, const char* title)
 {
-
     char str[1024]   = {};
     char func1[256]  = {};
     char betwen[3]   = {};
@@ -495,7 +473,6 @@ bool isEqual(double arg1, double arg2)
         return false;
 
 }
-
 size_t Factorial(size_t n)
 {
     if (n == 0)
@@ -586,7 +563,6 @@ TreeError RemoveDummyElements(Tree* tree, Node** node)
     Node** right = &(*node)->right;
 
     Node* copy_node = {};
-    Node* copy = {};
     bool check = false;
 
     
@@ -792,7 +768,13 @@ void LatexPrintDiv(Node* node, FILE* To)
 
 void LatexPrintExpandPow(Node* node, FILE* To)
 {
-
+    fprintf(To, "(");
+    LatexPrintNode(node->left, To);
+    fprintf(To, ")'");
+    fprintf(To, " \\cdot ");
+    fprintf(To, "( ");
+    LatexPrintNode(node->right, To);
+    fprintf(To, ")");
 }
 
 void LatexPrintExp(Node* node, FILE* To)

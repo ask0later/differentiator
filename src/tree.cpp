@@ -96,163 +96,209 @@ Node* CreateNode(Type type, void* value, Node* left, Node* right)
     return node;
 }
 
-// void Tokenization(Token** tokens, size_t token_i, Text* buf)
-// {   
-//     while (isspace(buf->str[buf->position]))
-//         buf->position++;
 
-//     //printf("%lu and %lu\n", buf->position, buf->size_buffer);
-//     while (buf->str[buf->position] == '\0')
-    
-//     //printf("<<%c>>\n", buf->str[11]);
+void SkipSpaces(Text* buf)
+{
+    while (isspace(buf->str[buf->position]))
+        buf->position++;
+}
 
-//     if (buf->position == buf->size_buffer)
-//         return;
+void DeleteTokens(Token** tokens)
+{
+    for (size_t i = 0; i < MAX_NUM_TOKENS; i++)
+    {
+        if ((*tokens)[i].type == VAR)
+            free((*tokens)[i].data.variable);
+    }
+}
 
-//     int val = 0;
+void CreateTokens(Token** tokens, size_t* token_i, Text* buf)
+{
+    //printf("%lu and %lu\n", buf->position, buf->size_buffer);
+    while (buf->str[buf->position] != '\0')
+    {
+        SkipSpaces(buf);
+        
+        if (buf->position == buf->size_buffer)
+            return;
 
-//     while (isdigit(buf->str[buf->position]))
-//     {
-//         val = 10 * val + buf->str[buf->position] - '0';
-//         buf->position++;
-//     }
-//     if (val != 0)
-//     {
-//         (*tokens)[token_i].type = NUM;
-//         (*tokens)[token_i].data.value = val;
-//         token_i++;
-//         return Tokenization(tokens, token_i, buf);
-//     }
+        ParseNumber(tokens, token_i, buf);
+        
+        ParseMathOperators(tokens, token_i, buf);
 
-//     for (size_t i = 0; i < NUM_COMMANDS; i++)
-//     {
-//         //printf("<%s> and <%s> \n", op, cmds[i].name);
-//         if (strncmp(&(buf->str[buf->position]), cmds[i].name, cmds[i].size_name) == 0)
-//         {
-//             //printf("<%s> and <%s> \n", &(buf->str[buf->position]), cmds[i].name);
-//             //printf("");
-//             //printf("!%lu %lu!\n", buf->position, buf->size_buffer);
-//             buf->position += cmds[i].size_name;
-//             //printf("!%lu %lu!\n", buf->position, buf->size_buffer);
+        ParseVariable(tokens, token_i, buf);
+    }
+    //printf("<<%c>>\n", buf->str[11]);
+}   
+
+void ParseVariable(Token** tokens, size_t* token_i, Text* buf)
+{
+    if (isalpha(buf->str[buf->position]))
+    {
+        char var[MAX_SIZE_NAME] = {};
+        size_t i_var = 0;
+        var[i_var] = buf->str[buf->position];
+        i_var++;
+        buf->position++;
+        while (isalnum(buf->str[buf->position]) || buf->str[buf->position] == '_')
+        {
+            var[i_var] = buf->str[buf->position];
+            buf->position++;
+            i_var++;
+        }
+        (*tokens)[*token_i].type = VAR;
+        (*tokens)[*token_i].data.variable = strdup(var);
+        (*token_i)++;
+    }
+}
+
+void ParseMathOperators(Token** tokens, size_t* token_i, Text* buf)
+{
+    for (size_t i = 0; i < NUM_MATH_COMMANDS; i++)
+    {
+        //printf("<%s> and <%s> \n", op, cmds[i].name);
+        if (strncmp(&(buf->str[buf->position]), math_cmds[i].name, math_cmds[i].size_name) == 0)
+        {
+            //printf("<%s> and <%s> \n", &(buf->str[buf->position]), cmds[i].name);
+            //printf("");
+            //printf("!%lu %lu!\n", buf->position, buf->size_buffer);
+            buf->position += math_cmds[i].size_name;
+            //printf("!%lu %lu!\n", buf->position, buf->size_buffer);
             
-//             //printf("fuck ~%d~", token_i);
-//             (*tokens)[token_i].type = OPERATOR;
-//             //printf("~%d~", (*tokens)[token_i].type);
-//             (*tokens)[token_i].data.value_op = (Operators) cmds[i].value;
-//             token_i++;
-            
-//             return Tokenization(tokens, token_i, buf);
-//         }
-//     }
-// }   
+            //printf("fuck ~%d~", token_i);
+            (*tokens)[*token_i].type = OPERATOR;
+            //printf("~%d~", (*tokens)[token_i].type);
+            (*tokens)[*token_i].data.value_op = (Operators) math_cmds[i].value;
+            (*token_i)++;
+        }
+    }
+}
 
-// Node* GetG(Text* buf, Token* tokens, size_t* token_i)
-// {
-//     //printf("<%d>", tokens[*token_i].type);
-//     Node* current = GetE(buf, tokens, token_i);
-//     syntax_assert(buf->str[buf->position] == '\0', buf);
-//     return current;
-// }
+void ParseNumber(Token** tokens, size_t* token_i, Text* buf)
+{
+    int val = 0;
+    while (isdigit(buf->str[buf->position]))
+    {
+        val = 10 * val + buf->str[buf->position] - '0';
+        buf->position++;
+    }
+    if (val != 0)
+    {
+        (*tokens)[*token_i].type = NUM;
+        (*tokens)[*token_i].data.value = val;
+        (*token_i)++;
+    }
+}
 
-// Node* GetE(Text* buf, Token* tokens, size_t* token_i)
-// {
-//     //printf("<%d>", tokens[*token_i].type);
-//     // return NULL;
-//     Node* val = GetT(buf, tokens, token_i);
+Node* GetG(Token* tokens, size_t* token_i, Var* vars)
+{
+    Node* current = GetExpression(tokens, token_i, vars);
+    return current;
+}
 
-//     if (tokens[*token_i].type == OPERATOR)
-//         while ((tokens[*token_i].data.value_op == OP_ADD) || (tokens[*token_i].data.value_op == OP_SUB))
-//         {
-//             Operators op = tokens[*token_i].data.value_op;
-//             (*token_i)++;
-//             Node* val2 = GetT(buf, tokens, token_i);
-//             val = CreateOperator(op, val, val2);
-//         }
-//     //syntax_assert(buf->str[buf->position] != '\0', buf);
-//     return val;
-// }
+Node* GetExpression(Token* tokens, size_t* token_i, Var* vars)
+{
+    Node* val = GetTerm(tokens, token_i, vars);
 
-
-// Node* GetT(Text* buf, Token* tokens, size_t* token_i)
-// {
-//     //printf("<%d>", tokens[*token_i].type);
-//     Node* val = GetP(buf, tokens, token_i);
+    if (tokens[*token_i].type == OPERATOR)
+        while ((tokens[*token_i].data.value_op == OP_ADD) || (tokens[*token_i].data.value_op == OP_SUB))
+        {
+            Operators op = tokens[*token_i].data.value_op;
+            (*token_i)++;
+            Node* val2 = GetTerm(tokens, token_i, vars);
+            val = CreateOperator(op, val, val2);
+        }
     
-//     if (tokens[*token_i].type == OPERATOR)
-//     {
-//         for (size_t i = 0; i < NUM_COMMANDS_T; i++)
-//         {
-//             if (cmdsT[i].value == tokens[*token_i].data.value_op)
-//             {
-//                 Operators op = tokens[*token_i].data.value_op;
-//                 (*token_i)++;
-//                 Node* val2 = GetP(buf, tokens, token_i);
-//                 val = CreateOperator(op , val, val2);
-//             }
-//         }
-//     }
+    return val;
+}
+
+
+Node* GetTerm(Token* tokens, size_t* token_i, Var* vars)
+{
+    Node* val = GetUnary(tokens, token_i, vars);
     
-//     return val;
-// }
+    if (tokens[*token_i].type == OPERATOR)
+    {
+        for (size_t i = 0; i < NUM_COMMANDS_T; i++)
+        {
+            if (cmdsT[i].value == tokens[*token_i].data.value_op)
+            {
+                Operators op = tokens[*token_i].data.value_op;
+                (*token_i)++;
+                Node* val2 = GetUnary(tokens, token_i, vars);
+                val = CreateOperator(op , val, val2);
+            }
+        }
+    }
+    
+    return val;
+}
 
-// Node* GetP(Text* buf, Token* tokens, size_t* token_i)
-// {
-//     //printf("<%d>", tokens[*token_i].type);
-//     if (tokens[*token_i].type == OPERATOR)
-//     {
-//         if (tokens[*token_i].data.value_op == OP_LEFT_P)
-//         {
-//             (*token_i)++;
-//             Node* val = GetE(buf, tokens, token_i);
-//             if (tokens[*token_i].data.value_op == OP_RIGHT_P)
-//                 (*token_i)++;
-//             else 
-//                 syntax_assert(false, buf);
-//             return val;
-//         }
-//     }
+Node* GetUnary(Token* tokens, size_t* token_i, Var* vars)
+{
+    Node* val = NULL;
+    if (tokens[*token_i].type == OPERATOR)
+    {
+        for (size_t i = 0; i < NUM_COMMANDS_U; i++)
+        {
+            if (cmdsU[i].value == tokens[*token_i].data.value_op)
+            {
+                Operators op = tokens[*token_i].data.value_op;
+                (*token_i)++;
+                Node* val2 = GetPrimaryExpression(tokens, token_i, vars);
+                val = CreateOperator(op , val, val2);
+            }
+        }
+    }
+    
+    if (val == NULL)
+        val = GetPrimaryExpression(tokens, token_i, vars);
 
-//     return GetC(buf, tokens, token_i);
-// }
+    return val;
+}
 
-// Node* GetC(Text* buf, Token* tokens, size_t* token_i)
-// {
+Node* GetPrimaryExpression(Token* tokens, size_t* token_i, Var* vars)
+{
+    if (tokens[*token_i].type == OPERATOR)
+    {
+        if (tokens[*token_i].data.value_op == OP_LEFT_P)
+        {
+            (*token_i)++;
+            Node* val = GetExpression(tokens, token_i, vars);
+            if (tokens[*token_i].data.value_op == OP_RIGHT_P)
+                (*token_i)++;
+            return val;
+        }
+    }
 
-//     return GetN(buf, tokens, token_i);
-// }
+    return GetC(tokens, token_i, vars);
+}
 
-// Node* GetN(Text* buf, Token* tokens, size_t* token_i)
-// {
-//     printf("<%d>", tokens[*token_i].type);
-//     //size_t old_position = buf->position;
-//     double val = 0;
-//     if (tokens[*token_i].type == NUM)
-//     {
-//         val = tokens[*token_i].data.value;
-//         (*token_i)++;
-//     }
+Node* GetC(Token* tokens, size_t* token_i, Var* vars)
+{
+    if (tokens[*token_i].type == VAR)
+    {
+        Node* var = CreateVariable(tokens[*token_i].data.variable, NULL, NULL);
+        vars[0].name_size = strlen(tokens[*token_i].data.variable);
+        memcpy(vars[0].name, tokens[*token_i].data.variable, vars[0].name_size);
+        vars[0].value = INT_MAX;
+        (*token_i)++;
+        return var;
+    }
+    return GetN(tokens, token_i);
+}
 
-//     //syntax_assert(buf->position > old_position, buf);
+Node* GetN(Token* tokens, size_t* token_i)
+{
+    double val = 0;
+    if (tokens[*token_i].type == NUM)
+    {
+        val = tokens[*token_i].data.value;
+        (*token_i)++;
+    }
 
-//     return CreateNumber(val, NULL, NULL);
-// }
-
-// void syntax_assert(bool x, Text* buf)
-// {
-//     if (x == false)
-//     {
-//         printf("syntax error: %s\n", buf->str);
-//         printf("              ");
-//         for (size_t i = 0; i < buf->position; i++)
-//         {
-//             printf(" ");
-//         }
-//         printf("^\n");
-
-
-//         exit(1);
-//     }
-// }
+    return CreateNumber(val, NULL, NULL);
+}
 
 
 TreeError LatexPrintNode(Node* node, FILE* To)
@@ -459,14 +505,14 @@ TreeError PasteObject(Tree* tree, char* source, Node** node, Var* names)
 {
     double value = 0;
 
-    for (size_t i = 0; i < NUM_COMMANDS; i++)
+    for (size_t i = 0; i < NUM_MATH_COMMANDS; i++)
     {
-        if (strncmp(source, cmds[i].name, cmds[i].size_name) == 0)
+        if (strncmp(source, math_cmds[i].name, math_cmds[i].size_name) == 0)
         {
-            (*node)->num_args = cmds[i].num_args;
-            (*node)->type  = cmds[i].type;
+            (*node)->num_args = math_cmds[i].num_args;
+            (*node)->type  = math_cmds[i].type;
             if ((*node)->type == OPERATOR)
-                (*node)->data.value_op  = (Operators) cmds[i].value;
+                (*node)->data.value_op  = (Operators) math_cmds[i].value;
             return NO_ERROR;
         }
     }
