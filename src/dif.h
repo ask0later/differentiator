@@ -4,8 +4,11 @@
 #include "tree.h"
 #include "graphic.h"
 #include "time.h"
+#include <math.h>
 
 const int NUM_PHRASES = 15;
+const size_t MAX_SIZE_TEXT = 1024;
+const double _NAN = (double) INT_MAX;
 
 const char* const funny_phrases[NUM_PHRASES] = {"Я лучше промолчу:",
                                           "Поняли? Не поняли? Ну жалко, мне вас жаль.",
@@ -36,9 +39,8 @@ Node* GetTangetTree(Tree* tree, Var* vars, size_t real_var);
 
 size_t Factorial(size_t n);
 
-size_t GetDifferentiationVar(Var* vars);
-void AssignVariables(Tree* tree, Var* vars);
-
+size_t GetDifferentiationVar(Table* names);
+void AssignVariables(Table* names);
 
 // gnuplot
 void ReadFromTextToBuffer(char* function, const char* filename);
@@ -47,7 +49,8 @@ void BuildGraphic(const char* Type, const char* ToGnuplot, const char* FromGnupl
 
 // print
 void LatexPrintBeginning(FILE* To);
-void LatexPrintDiff(FILE* To);
+void LatexPrintDif(FILE* To, Tree* tree, Table* names, size_t real_var);
+void LatexPrintTaylorAndTanget(FILE* To, Tree* tree, Table* names, size_t real_var);
 void LatexPrintEnding(FILE* To);
 
 

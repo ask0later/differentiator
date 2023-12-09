@@ -14,14 +14,12 @@ TreeError ConstructorTree(Tree* tree)
 Node* CreateVariable(char* value, Node* left, Node* right)
 {
     Node* node = (Node*) calloc(1, sizeof(Node));
-    if (!node) {return 0;}
+    if (!node) {return NULL;}
 
     node->type = VAR;
 
     node->left   = left;
     node->right  = right;
-
-    
 
     node->data.variable = strdup(value);
 
@@ -31,14 +29,12 @@ Node* CreateVariable(char* value, Node* left, Node* right)
 Node* CreateNumber(double value, Node* left, Node* right)
 {
     Node* node = (Node*) calloc(1, sizeof(Node));
-    if (!node) {return 0;}
+    if (!node) {return NULL;}
 
     node->type = NUM;
 
     node->left   = left;
     node->right  = right;
-
-    
 
     node->data.value = value;
 
@@ -48,14 +44,12 @@ Node* CreateNumber(double value, Node* left, Node* right)
 Node* CreateOperator(Operators value, Node* left, Node* right)
 {
     Node* node = (Node*) calloc(1, sizeof(Node));
-    if (!node) {return 0;}
+    if (!node) {return NULL;}
 
     node->type = OPERATOR;
 
     node->left   = left;
     node->right  = right;
-
-    
 
     node->data.value_op = value;
 
@@ -66,16 +60,12 @@ Node* CreateOperator(Operators value, Node* left, Node* right)
 Node* CreateNode(Type type, void* value, Node* left, Node* right)
 {
     Node* node = (Node*) calloc(1, sizeof(Node));
-    if (!node) {return 0;}
+    if (!node) {return NULL;}
 
     node->left   = left;
     node->right  = right;
 
     node->type = type;
-
-    // node->data.value_op  = NO_OP;
-    // node->data.value_fun = NO_FUN;
-    // node->data.variable  = NULL;
 
     switch (node->type)
     {
@@ -88,7 +78,6 @@ Node* CreateNode(Type type, void* value, Node* left, Node* right)
     case VAR:
         node->data.variable = strdup((const char*) value);
         break;
-
     default:
         break;
     }
@@ -96,6 +85,32 @@ Node* CreateNode(Type type, void* value, Node* left, Node* right)
     return node;
 }
 
+void DeleteToken(Node* node)
+{
+    if (node->type == VAR)
+        free(node->data.variable);
+
+    free(node);
+
+    return;
+}
+
+void DeleteNode(Node* node)
+{
+    if (!node) return;
+
+    if (node->type == VAR)
+        free(node->data.variable);
+    
+    if (node->left)
+        DeleteNode(node->left);
+    if (node->right)
+        DeleteNode(node->right);
+    
+    free(node);
+    
+    return;
+}
 
 void SkipSpaces(Text* buf)
 {
@@ -103,35 +118,62 @@ void SkipSpaces(Text* buf)
         buf->position++;
 }
 
-void DeleteTokens(Token** tokens)
+TreeError ConstructorTokens(Tokens* tkns, Text* buf)
 {
-    for (size_t i = 0; i < MAX_NUM_TOKENS; i++)
-    {
-        if ((*tokens)[i].type == VAR)
-            free((*tokens)[i].data.variable);
-    }
+    tkns->size = buf->size_buffer;
+    tkns->position = 0;
+    tkns->tokens = (Node**) calloc(tkns->size, sizeof(Node*));
+    if (!tkns->tokens) return ALLOC_ERROR;
+    
+    return NO_ERROR;
 }
 
-void CreateTokens(Token** tokens, size_t* token_i, Text* buf)
+TreeError DestructorTokens(Tokens* tkns)
 {
-    //printf("%lu and %lu\n", buf->position, buf->size_buffer);
+    for (size_t i = 0; i < tkns->size; i++)
+        DeleteToken(tkns->tokens[i]);
+
+    tkns->size = (size_t) INT_MAX;
+    tkns->position = (size_t) INT_MAX;
+    free(tkns->tokens);
+    
+    return NO_ERROR;
+}
+
+
+TreeError CreateTokens(Tokens* tkns, Text* buf, Table* names)
+{
     while (buf->str[buf->position] != '\0')
     {
         SkipSpaces(buf);
         
         if (buf->position == buf->size_buffer)
-            return;
+            return NO_ERROR;
 
-        ParseNumber(tokens, token_i, buf);
+        ParseNumber(tkns, buf);
         
-        ParseMathOperators(tokens, token_i, buf);
+        ParseMathOperators(tkns, buf);
 
-        ParseVariable(tokens, token_i, buf);
+        ParseVariable(tkns, buf, names);
     }
-    //printf("<<%c>>\n", buf->str[11]);
+
+    tkns->tokens[tkns->position] = CreateOperator(END, NULL, NULL);
+
+    tkns->position++;
+
+    tkns->size = tkns->position;
+
+    Node** ptr = (Node**) realloc(tkns->tokens, tkns->size * sizeof(Node*));
+    if (ptr == NULL) {return ALLOC_ERROR;}
+
+    tkns->tokens = ptr;
+
+    tkns->position = 0;
+
+    return NO_ERROR;
 }   
 
-void ParseVariable(Token** tokens, size_t* token_i, Text* buf)
+TreeError ParseVariable(Tokens* tkns, Text* buf, Table* names)
 {
     if (isalpha(buf->str[buf->position]))
     {
@@ -146,35 +188,43 @@ void ParseVariable(Token** tokens, size_t* token_i, Text* buf)
             buf->position++;
             i_var++;
         }
-        (*tokens)[*token_i].type = VAR;
-        (*tokens)[*token_i].data.variable = strdup(var);
-        (*token_i)++;
+        tkns->tokens[tkns->position] = CreateVariable(var, NULL, NULL);
+        tkns->position++;
+
+        for (size_t i = 0; i < MAX_NUM_VARS - 1; i++)
+        {
+            if (strcmp(var, names->vars[i].name) == 0)
+            {
+                return NO_ERROR;
+            }
+        }
+        names->vars[names->num_var].name_size = strlen(var);
+        memcpy(names->vars[names->num_var].name, var, names->vars[names->num_var].name_size);
+        names->vars[names->num_var].value = (double) INT_MAX;
+
+        names->num_var++;
     }
+
+    return NO_ERROR;
 }
 
-void ParseMathOperators(Token** tokens, size_t* token_i, Text* buf)
+TreeError ParseMathOperators(Tokens* tkns, Text* buf)
 {
     for (size_t i = 0; i < NUM_MATH_COMMANDS; i++)
     {
-        //printf("<%s> and <%s> \n", op, cmds[i].name);
         if (strncmp(&(buf->str[buf->position]), math_cmds[i].name, math_cmds[i].size_name) == 0)
         {
-            //printf("<%s> and <%s> \n", &(buf->str[buf->position]), cmds[i].name);
-            //printf("");
-            //printf("!%lu %lu!\n", buf->position, buf->size_buffer);
             buf->position += math_cmds[i].size_name;
-            //printf("!%lu %lu!\n", buf->position, buf->size_buffer);
-            
-            //printf("fuck ~%d~", token_i);
-            (*tokens)[*token_i].type = OPERATOR;
-            //printf("~%d~", (*tokens)[token_i].type);
-            (*tokens)[*token_i].data.value_op = (Operators) math_cmds[i].value;
-            (*token_i)++;
+     
+            tkns->tokens[tkns->position] = CreateOperator(math_cmds[i].value, NULL, NULL);
+            tkns->position++;
         }
     }
+
+    return NO_ERROR;
 }
 
-void ParseNumber(Token** tokens, size_t* token_i, Text* buf)
+TreeError ParseNumber(Tokens* tkns, Text* buf)
 {
     int val = 0;
     while (isdigit(buf->str[buf->position]))
@@ -184,120 +234,137 @@ void ParseNumber(Token** tokens, size_t* token_i, Text* buf)
     }
     if (val != 0)
     {
-        (*tokens)[*token_i].type = NUM;
-        (*tokens)[*token_i].data.value = val;
-        (*token_i)++;
+        tkns->tokens[tkns->position] = CreateNumber(val, NULL, NULL);
+        tkns->position++;    
     }
+    
+    return NO_ERROR;
 }
 
-Node* GetG(Token* tokens, size_t* token_i, Var* vars)
+Node* GetG(Tokens* tkns)
 {
-    Node* current = GetExpression(tokens, token_i, vars);
+    Node* current = GetExpression(tkns);
     return current;
 }
 
-Node* GetExpression(Token* tokens, size_t* token_i, Var* vars)
+Node* GetExpression(Tokens* tkns)
 {
-    Node* val = GetTerm(tokens, token_i, vars);
-
-    if (tokens[*token_i].type == OPERATOR)
-        while ((tokens[*token_i].data.value_op == OP_ADD) || (tokens[*token_i].data.value_op == OP_SUB))
-        {
-            Operators op = tokens[*token_i].data.value_op;
-            (*token_i)++;
-            Node* val2 = GetTerm(tokens, token_i, vars);
-            val = CreateOperator(op, val, val2);
-        }
     
-    return val;
+    Node* value_1 = GetTerm(tkns);
+    Node* value_3 = NULL;
+
+    if (tkns->tokens[tkns->position]->type == OPERATOR)
+    {
+        while ((tkns->tokens[tkns->position]->data.value_op == OP_ADD) || (tkns->tokens[tkns->position]->data.value_op == OP_SUB))
+        {
+            value_3 = tkns->tokens[tkns->position];
+            printf("%d", tkns->tokens[tkns->position]->data.value_op);
+            tkns->position++;
+            
+            Node* value_2 = GetTerm(tkns);
+
+            value_3->left = value_1;
+            value_3->right = value_2;
+
+            value_1 = value_3;
+        }
+    }
+    
+    return value_1;
 }
 
 
-Node* GetTerm(Token* tokens, size_t* token_i, Var* vars)
+Node* GetTerm(Tokens* tkns)
 {
-    Node* val = GetUnary(tokens, token_i, vars);
+    Node* value_1 = GetUnary(tkns);
     
-    if (tokens[*token_i].type == OPERATOR)
+    if (tkns->tokens[tkns->position]->type == OPERATOR)
     {
         for (size_t i = 0; i < NUM_COMMANDS_T; i++)
         {
-            if (cmdsT[i].value == tokens[*token_i].data.value_op)
+            if (cmdsT[i].value == tkns->tokens[tkns->position]->data.value_op)
             {
-                Operators op = tokens[*token_i].data.value_op;
-                (*token_i)++;
-                Node* val2 = GetUnary(tokens, token_i, vars);
-                val = CreateOperator(op , val, val2);
+                Node* value_3 = tkns->tokens[tkns->position];
+                tkns->position++;
+                
+                Node* value_2 = GetUnary(tkns);
+                value_3->left = value_1;
+                value_3->right = value_2;
+
+                value_1 = value_3;
             }
         }
     }
     
-    return val;
+    return value_1;
 }
 
-Node* GetUnary(Token* tokens, size_t* token_i, Var* vars)
+Node* GetUnary(Tokens* tkns)
 {
-    Node* val = NULL;
-    if (tokens[*token_i].type == OPERATOR)
+    Node* value_1 = NULL;
+    if (tkns->tokens[tkns->position]->type == OPERATOR)
     {
         for (size_t i = 0; i < NUM_COMMANDS_U; i++)
         {
-            if (cmdsU[i].value == tokens[*token_i].data.value_op)
+            if (cmdsU[i].value == tkns->tokens[tkns->position]->data.value_op)
             {
-                Operators op = tokens[*token_i].data.value_op;
-                (*token_i)++;
-                Node* val2 = GetPrimaryExpression(tokens, token_i, vars);
-                val = CreateOperator(op , val, val2);
+                value_1 = tkns->tokens[tkns->position];
+                tkns->position++;
+                Node* value_2 = GetPrimaryExpression(tkns);
+
+                value_1->right = value_2;
             }
         }
     }
     
-    if (val == NULL)
-        val = GetPrimaryExpression(tokens, token_i, vars);
+    if (value_1 == NULL)
+        value_1 = GetPrimaryExpression(tkns);
 
-    return val;
+    return value_1;
 }
 
-Node* GetPrimaryExpression(Token* tokens, size_t* token_i, Var* vars)
+Node* GetPrimaryExpression(Tokens* tkns)
 {
-    if (tokens[*token_i].type == OPERATOR)
+    if (tkns->tokens[tkns->position]->type == OPERATOR)
     {
-        if (tokens[*token_i].data.value_op == OP_LEFT_P)
+        if (tkns->tokens[tkns->position]->data.value_op == L_BRACKET)
         {
-            (*token_i)++;
-            Node* val = GetExpression(tokens, token_i, vars);
-            if (tokens[*token_i].data.value_op == OP_RIGHT_P)
-                (*token_i)++;
+            tkns->position++;
+            Node* val = GetExpression(tkns);
+            if (tkns->tokens[tkns->position]->data.value_op == R_BRACKET)
+                tkns->position++;
+            else
+                return NULL;
+
             return val;
         }
     }
 
-    return GetC(tokens, token_i, vars);
+    return GetC(tkns);
 }
 
-Node* GetC(Token* tokens, size_t* token_i, Var* vars)
+Node* GetC(Tokens* tkns)
 {
-    if (tokens[*token_i].type == VAR)
+    if (tkns->tokens[tkns->position]->type == VAR)
     {
-        Node* var = CreateVariable(tokens[*token_i].data.variable, NULL, NULL);
-        vars[0].name_size = strlen(tokens[*token_i].data.variable);
-        memcpy(vars[0].name, tokens[*token_i].data.variable, vars[0].name_size);
-        vars[0].value = INT_MAX;
-        (*token_i)++;
+        Node* var = tkns->tokens[tkns->position];
+        tkns->position++;
         return var;
     }
-    return GetN(tokens, token_i);
+    return GetN(tkns);
 }
 
-Node* GetN(Token* tokens, size_t* token_i)
+Node* GetN(Tokens* tkns)
 {
-    double val = 0;
-    if (tokens[*token_i].type == NUM)
+
+    if (tkns->tokens[tkns->position]->type == NUM)
     {
-        val = tokens[*token_i].data.value;
-        (*token_i)++;
+        Node* num = tkns->tokens[tkns->position];
+        tkns->position++;
+        return num;
     }
 
-    return CreateNumber(val, NULL, NULL);
+    return NULL;
 }
 
 
@@ -468,8 +535,17 @@ void PrintOperator(Operators value_Operators, FILE* To, for_what for_what)
             fprintf(To, " sqrt ");
             break;
         case FUN_LN:
-            fprintf(To, " ln ");
-            break;  
+            if (for_what == GNUPLOT)
+                fprintf(To, " log ");
+            else
+                fprintf(To, " ln ");
+            break;
+        case OP_UN_SUB:
+            fprintf (To, " - ");
+            break;
+        case L_BRACKET:
+        case R_BRACKET:
+        case END:
         default:
             printf("extra");
             break;
@@ -482,24 +558,6 @@ void DestructorTree(Tree* tree)
     
     DeleteNode(tree->root);
 }
-
-void DeleteNode(Node* node)
-{
-    if (!node) return;
-
-    if (node->type == VAR)
-        free(node->data.variable);
-    
-    if (node->left)
-        DeleteNode(node->left);
-    if (node->right)
-        DeleteNode(node->right);
-    
-    free(node);
-    
-    return;
-}
-
 
 TreeError PasteObject(Tree* tree, char* source, Node** node, Var* names)
 {
@@ -655,6 +713,25 @@ TreeError ReadObject(char* source, char** position)
     return NO_ERROR;
 }
 
+void DumpTokens(Tokens* tkns)
+{
+    for (size_t i = 0; i < tkns->size; i++)
+    {
+        if (tkns->tokens[i]->type == OPERATOR)
+        {
+            printf("operator = %d;\n", tkns->tokens[i]->data.value_op);
+        }
+        else if (tkns->tokens[i]->type == NUM)
+        {
+            printf("num = %lg;\n", tkns->tokens[i]->data.value);
+        }
+        else if (tkns->tokens[i]->type == VAR)
+        {
+            printf("var = <%s>;\n", tkns->tokens[i]->data.variable);
+        }
+    }
+}
+
 
 void DumpErrors(TreeError error)
 {
@@ -663,10 +740,10 @@ void DumpErrors(TreeError error)
         case NO_ERROR:
             return;
             break;
-        case ERROR_LOOP:
+        case LOOP_ERROR:
             printf("error: loop in tree\n");
             break;
-        case ERROR_ALLOCATION:
+        case ALLOC_ERROR:
             printf("error: memory allocation is fail\n");
             break;
         case ERROR_CONST:
@@ -709,7 +786,7 @@ TreeError CheckNoLoop(Tree tree)
     {
         if ((addresses[i] == addresses[i + 1]) && (addresses[i] != NULL))
         {
-            return ERROR_LOOP;
+            return LOOP_ERROR;
         }
     }
     return NO_ERROR;

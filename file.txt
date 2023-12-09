@@ -1,1 +1,1 @@
-sin(x)
+ln (sin(x) + 1)

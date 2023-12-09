@@ -4,8 +4,8 @@ set grid xtics ytics mxtics mytics
 set xlabel 'x' font 'Sans,20'
 set ylabel 'f(x)' font 'Sans,20'
 set title 'Function and Tanget' font 'Sans,25'
-set yrange[-3:3]
+set yrange[-10:10]
 set xrange[-10:10]
 set title 'Function and Tanget' font "Helvetica Bold, 20"
-plot (  sin ( x )  )  lc rgb "red" , ( x )  lc rgb "green"
+plot (  log ( (  sin ( x )  )  + ( 1 )  )  )  lc rgb "red" , ( x )  lc rgb "green"
 set term pop

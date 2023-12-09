@@ -23,8 +23,6 @@ Node* Differentiate(Node* node, Var vars, FILE* To, bool need_print)
     if (need_print == true)
         PrintSolutionDiff(node, To, vars);
 
-    
-
     if (node->type == NUM) return _NUM(0);
 
     if (node->type == VAR) 
@@ -71,6 +69,11 @@ Node* Differentiate(Node* node, Var vars, FILE* To, bool need_print)
 
             case FUN_LN: return _MUL(_d(node->right), _DIV(_NUM(1), _c(node->right)));
             
+            case OP_UN_SUB:
+            case L_BRACKET:
+            case R_BRACKET:
+            case END:
+
             default:
                 printf("extra error");
                 break;
@@ -100,7 +103,7 @@ Node* Copynator(Node* node)
 
 double Evaluate(Tree* tree, Node* node, Var* vars)
 {
-    //if (!node) {return NAN;}
+    if (!node) {return NAN;}
     if (node->type == NUM)
     {
         return node->data.value;
@@ -151,11 +154,75 @@ double Evaluate(Tree* tree, Node* node, Var* vars)
 
             case FUN_LN:   return (log(right));
 
+            case OP_UN_SUB:
+            case L_BRACKET:
+            case R_BRACKET:
+            case END:
+
             default: printf("new operator"); return NAN;
         }
     }
 
     return NAN;
+}
+
+
+void LatexPrintDif(FILE* To, Tree* tree, Table* names, size_t real_var)
+{
+    struct Tree tree_dif = {};
+
+    fprintf(To, "$f(x) = ");
+    LatexPrintNode(tree->root, To);
+    fprintf(To, "$\\\\\n");
+    
+    fprintf(To, "Производная высчитывается относительно переменной <%s> при помощи элементарых правил арифметики и очевидных преобразований\\\\\n", names->vars[real_var].name);
+    
+    tree_dif.root = Differentiate(tree->root, names->vars[real_var], To, true);
+    
+    Simplification(&tree_dif);
+    fprintf(To, "В итоге мы получаем.\\\\\n");
+    fprintf(To, "$f'(x) = ");
+    LatexPrintNode(tree_dif.root, To);
+    fprintf(To, "$\\\\\n");
+    
+    DestructorTree(&tree_dif);
+
+}
+
+void LatexPrintTaylorAndTanget(FILE* To, Tree* tree, Table* names, size_t real_var)
+{
+    Tree tree_tay = {};
+    Tree tree_tanget = {};
+
+    size_t power = 4;
+
+    fprintf(To, "Разложение по Тейлору:\\\\\n");
+    fprintf(To, "$f(x) = ");
+    tree_tay.root = Taylortition(tree, power, names->vars, real_var);
+    
+    Simplification(&tree_tay);
+    GraphicDump(tree, &tree_tay);
+
+    LatexPrintNode(tree_tay.root, To);
+    
+    if (isEqual(names->vars[real_var].value, 0))
+        fprintf(To, " + o( %s ^ %lu )$\\\\\n", names->vars[real_var].name, power);
+    else
+        fprintf(To, " + o( ( %s - %lg ) ^ %lu )$\\\\\n", names->vars[real_var].name, names->vars[real_var].value, power);
+    
+    tree_tanget.root = GetTangetTree(tree, names->vars, real_var);
+    Simplification(&tree_tanget);
+
+    fprintf(To, "Касательная в точке %s = %lg:\\\\\n", names->vars[real_var].name, names->vars[real_var].value);
+    fprintf(To, "$f(x) = ");
+    LatexPrintNode(tree_tanget.root, To);
+    fprintf(To, "$\\\\\n");
+
+    AddGraphics(tree, &tree_tay, &tree_tanget);
+
+    DestructorTree(&tree_tanget);
+    DestructorTree(&tree_tay);
+
 }
 
 void LatexPrintBeginning(FILE* To)
@@ -184,32 +251,34 @@ void LatexPrintBeginning(FILE* To)
 }
 void LatexPrintEnding(FILE* To)
 {
+    fprintf(To, "\\includepdf{function1.pdf}\n");
+    fprintf(To, "\\includepdf{function2.pdf}\n");
+
     fprintf(To, "\\end{flushleft}\n"
                 "\\end{document}\n");
 }
 
-void AssignVariables(Tree* tree, Var* vars)
+void AssignVariables(Table* names)
 {
-    double x = 0;
-    for (size_t i = 0; i < tree->num_vars; i++)
+    for (size_t i = 0; i < names->num_var; i++)
     {
-        if (isEqual(vars[i].value, (double) INT_MAX))
+        if (isEqual(names->vars[i].value, (double) INT_MAX))
         {
-            printf("Введите чему равна переменная \"%s\" = ", vars[i].name);
-            scanf("%lg", &x);
-            vars[i].value = x;
+            printf("Введите чему равна переменная \"%s\" = ", names->vars[i].name);
+            scanf("%lg", &(names->vars[i].value));
             CleanBuffer();
         }
-        printf("vars[%lu] = \"%s\" = %3lg (длина имени переменной = %2lu)\n", i, vars[i].name, vars[i].value, vars[i].name_size);
+        printf("vars[%lu] = \"%s\" = %3lg (длина имени переменной = %2lu)\n", i, names->vars[i].name, names->vars[i].value, names->vars[i].name_size);
     }
 }
+
 void CleanBuffer()
 {
     while (getchar() != '\n')
         ;
 }
 
-size_t GetDifferentiationVar(Var* vars)
+size_t GetDifferentiationVar(Table* names)
 {
     char str[MAX_SIZE_ARG] = {};
     printf("Введите относительно какой переменной посчитать производнуюю ");
@@ -219,13 +288,13 @@ size_t GetDifferentiationVar(Var* vars)
 
     for (size_t i = 0; i < MAX_NUM_VARS - 1; i++)
     {
-        if (strncmp(str, vars[i].name, vars[i].name_size) == 0)
+        if (strncmp(str, names->vars[i].name, names->vars[i].name_size) == 0)
         {   
             return i;
         }
     }
 
-    return GetDifferentiationVar(vars);
+    return GetDifferentiationVar(names);
 }
 
 void AddGraphics(Tree* tree1, Tree* tree2, Tree* tree3)
@@ -242,18 +311,18 @@ void AddGraphics(Tree* tree1, Tree* tree2, Tree* tree3)
     PrintNode(tree3->root, TangetFunc, IN_ORDER, GNUPLOT);
     fclose(TangetFunc);
     
-    char function1[1024] = {};
-    char function2[4096] = {};
-    char function3[2048] = {};
+    char function1[MAX_SIZE_TEXT] = {};
+    char function2[4 * MAX_SIZE_TEXT] = {};
+    char function3[2 * MAX_SIZE_TEXT] = {};
     
     ReadFromTextToBuffer(function1, "function.txt");
     ReadFromTextToBuffer(function2, "taylor.txt");
     ReadFromTextToBuffer(function3, "tanget.txt");
 
-    BuildGraphic("pdf", "function1.pdf", "function1.txt", function1, function2, "[-3:3]", "[-10:10]", "Function and Taylor");
+    BuildGraphic("pdf", "function1.pdf", "function1.txt", function1, function2, "[-10:10]", "[-10:10]", "Function and Taylor");
     system("gnuplot -c function1.txt");
 
-    BuildGraphic("pdf", "function2.pdf", "function2.txt", function1, function3, "[-3:3]", "[-10:10]", "Function and Tanget");
+    BuildGraphic("pdf", "function2.pdf", "function2.txt", function1, function3, "[-10:10]", "[-10:10]", "Function and Tanget");
     system("gnuplot -c function2.txt");
 
     return;
@@ -262,8 +331,8 @@ void AddGraphics(Tree* tree1, Tree* tree2, Tree* tree3)
 Node* GetTangetTree(Tree* tree, Var* vars, size_t real_var)
 {
     Tree tree_tanget = {};
-
     Tree tree_dif = {};
+
     tree_dif.root = Differentiate(tree->root, vars[real_var], NULL, false);
     tree_dif.num_vars = 1;
 
@@ -339,6 +408,10 @@ void PrintSolutionDiff(Node* node, FILE* To, Var vars)
 
             case FUN_LN:    LatexPrintLn(node, To); break;  
             
+            case OP_UN_SUB:
+            case L_BRACKET:
+            case R_BRACKET:
+            case END:
             
             default:
                 printf("extra error");
@@ -405,11 +478,11 @@ Node* Taylortition(Tree* tree, size_t power, Var* vars, size_t real_var)
 
 void BuildGraphic(const char* Type, const char* ToGnuplot, const char* FromGnuplot, char* function1, char* function2, const char* yrange, const char* xrange, const char* title)
 {
-    char str[1024]   = {};
-    char func1[256]  = {};
+    char str[4 * MAX_SIZE_TEXT]   = {};
+    char func1[MAX_SIZE_TEXT]  = {};
     char betwen[3]   = {};
-    char func2[256]  = {};
-    char temp[256]   = {};
+    char func2[MAX_SIZE_TEXT]  = {};
+    char temp[MAX_SIZE_TEXT / 4]   = {};
     
 
 

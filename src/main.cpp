@@ -7,97 +7,42 @@
 
 int main()
 {   
-    Text buf = {};
+    struct Text buf = {};
+    struct Tree tree = {};
+
+    Table names = {};
+
     CreateBuffer(&buf, "file.txt");
-    Token tokens[MAX_NUM_TOKENS] = {};
-    Token* ip_tok = tokens;
 
-    Tree tree   = {};
-    Tree tree_dif = {};
+    Tokens tkns = {};
+    ConstructorTokens(&tkns, &buf);
 
-    ConstructorTree(&tree);
-    ConstructorTree(&tree_dif);
-
-    Var vars[MAX_NUM_VARS] = {};
-
-
-    char* position = buf.str;
-    size_t i_token = 0;
-
-    CreateTokens(&ip_tok, &i_token, &buf);
-    i_token = 0;
-    tree.root = GetG(tokens, &i_token, vars);
-    tree.num_vars = 1;
+    CreateTokens(&tkns, &buf, &names);
     
-
-    // TreeError error = ReadTree(&tree, &tree.root, &position, IN_ORDER, vars, buf);
-    // if (error != NO_ERROR)
-    // {
-    //     DumpErrors(error);
-    //     DestructorTree(&tree);
-    //     return 1;
-    // }
-
+        
+    tree.num_vars = names.num_var;
+    
+    tree.root = GetG(&tkns);
+    
     Simplification(&tree);
+    GraphicDump(&tree, NULL);
     
-    //PrintNode(tree.root, stdout, IN_ORDER, NOTHING);
+    AssignVariables(&names);
 
-    AssignVariables(&tree, vars);
-
-    size_t power = 3;
+    
     size_t real_var = 0;
 
     if (tree.num_vars != 1)
-        real_var = GetDifferentiationVar(vars);
+        real_var = GetDifferentiationVar(&names);
 
 
     FILE* To = fopen("latex.txt", "w");
 
     LatexPrintBeginning(To);
-    fprintf(To, "$f(x) = ");
-    LatexPrintNode(tree.root, To);
-    fprintf(To, "$\\\\\n");
-    
-    fprintf(To, "Производная высчитывается относительно переменной <%s> при помощи элементарых правил арифметики и очевидных преобразований\\\\\n", vars[real_var].name);
 
-    
-    tree_dif.root = Differentiate(tree.root, vars[real_var], To, true);
-    GraphicDump(&tree, &tree_dif);
-    Simplification(&tree_dif);
-    
-
-    fprintf(To, "В итоге мы получаем.\\\\\n");
-    fprintf(To, "$f'(x) = ");
-    LatexPrintNode(tree_dif.root, To);
-    fprintf(To, "$\\\\\n");
-
-
-    Tree tree_tay = {};
-    fprintf(To, "Разложение по Тейлору:\\\\\n");
-    fprintf(To, "$f(x) = ");
-    tree_tay.root = Taylortition(&tree, power, vars, real_var);
-    
-    Simplification(&tree_tay);
-    
-
-
-    LatexPrintNode(tree_tay.root, To);
-    
-    fprintf(To, " + o( ( x - %lg ) ^ %lu )$\\\\\n", vars[0].value, power);
-
-    Tree tree_tanget = {};
-    tree_tanget.root = GetTangetTree(&tree, vars, real_var);
-    Simplification(&tree_tanget);
-
-    fprintf(To, "Касательная в точке %s = %lg:\\\\\n", vars[real_var].name ,vars[real_var].value);
-    fprintf(To, "$f(x) = ");
-    LatexPrintNode(tree_tanget.root, To);
-    fprintf(To, "$\\\\\n");
-
-    AddGraphics(&tree, &tree_tay, &tree_tanget);
-
-    fprintf(To, "\\includepdf{function1.pdf}\n");
-    fprintf(To, "\\includepdf{function2.pdf}\n");
+    LatexPrintDif(To, &tree, &names, real_var);
+    LatexPrintTaylorAndTanget(To, &tree, &names, real_var);
+    //GraphicDump(&tree, &tree_dif);
 
     LatexPrintEnding(To);
 
@@ -105,14 +50,11 @@ int main()
 
     system("pdflatex \"latex.txt\"");
 
-    DestructorTree(&tree);
-    DestructorTree(&tree_tanget);
-    DestructorTree(&tree_dif);
-    DestructorTree(&tree_tay);
+    //DestructorTree(&tree);
 
+    DestructorTokens(&tkns);
 
     DeleteBuffer(&buf);
-    DeleteTokens(&ip_tok);
 
     return 0;
 }

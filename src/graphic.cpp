@@ -24,8 +24,6 @@ TreeError GraphicDump(Tree* tree1, Tree* tree2)
 
 TreeError GraphicDumpNode(Node* node)
 {
-    if (!node) return NO_ERROR;
-
     if (!node) {return NO_ERROR;}
 
     char str[MAX_SIZE_ARG] = {};
@@ -66,6 +64,12 @@ TreeError GraphicDumpNode(Node* node)
             case FUN_LN:
                 sprintf(str, " ln ");
                 break;
+            case OP_UN_SUB:
+                sprintf(str, " - ");
+                break;
+            case L_BRACKET:
+            case R_BRACKET:
+            case END:
             default:
                 printf("extra");
                 break;
